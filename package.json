@@ -1,0 +1,16 @@
+{
+  "name": "MMM-Tibber",
+  "version": "0.1.0",
+  "description": "Show data from Tibber",
+  "author": "Otto Paulsen",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ottopaulsen/MMM-Tibber.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "highcharts": "^7.2.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
+  }
+}
