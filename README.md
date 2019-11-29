@@ -33,6 +33,8 @@ Here is an example configuration. Put it in the `MagicMirror/config/config.js` f
 },
 ```
 
+Of course, you need a [Tibber](https://tibber.com/) account to use this module. Your access token (`tibberToken`) can be found in the [developer pages](https://developer.tibber.com/settings/accesstoken).
+
 The above is the minimum configuration required. Here is the complete module configuration you can use, with default values:
 
 ``` javascript
