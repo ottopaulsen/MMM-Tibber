@@ -1,10 +1,12 @@
 # MMM Tibber
 
-Show data from Tibber
+Show electricity price data from Tibber.
+
+Yo can see the price per hour for today and tomorrow.
 
 ## Screenshot
 
-![Screenshot](doc/MMM-Tibber.png)
+![Screenshot](MMM-Tibber.png)
 
 
 ## Installation
