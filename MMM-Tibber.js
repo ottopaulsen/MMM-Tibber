@@ -100,11 +100,13 @@ Module.register("MMM-Tibber", {
         let maxPrice = prices.twoDays.reduce((max, p) => p.total > max ? p.total : max, prices.twoDays[0].total);
         let now = new Date().getHours()
         let curPriceBackgroundColor
+        let curPrice = prices.current
         let categories = [];
         let data = prices.twoDays.map((p, i) => {
             let ci = i < now ? 0 : i == now ? 1 : 2
             if(i == now) {
-                curPriceBackgroundColor = this.config.columnColors[p.level][ci];
+                curPriceBackgroundColor = this.config.columnColors[p.level][0];
+                curPrice = p.total // Must use this since reading from Tibber only once per hour
             }
             return this.showHour(i, now)
                 ? 
@@ -207,10 +209,10 @@ Module.register("MMM-Tibber", {
                 labels: [
                     {
                         point: this.config.showCurrentPrice ? 'cur' : 'dontshow',
-                        text: this.formatPrice(prices.current),
+                        text: this.formatPrice(curPrice),
                         backgroundColor: curPriceBackgroundColor,
                         borderColor: this.config.curPriceColor,
-                        y: -30,
+                        y: -40,
                         style: {
                             color: this.config.curPriceColor,
                             fontSize: this.config.priceFontSize,

@@ -1,6 +1,6 @@
 # MMM Tibber
 
-Show electricity price data from Tibber.
+Module for [MagicMirror](https://github.com/MichMich/MagicMirror/) showing electricity price data from Tibber.
 
 Yo can see the price per hour for today and tomorrow.
 
