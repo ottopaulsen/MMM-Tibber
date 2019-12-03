@@ -2,7 +2,7 @@
 
 Module for [MagicMirror](https://github.com/MichMich/MagicMirror/) showing electricity price data from Tibber.
 
-Yo can see the price per hour for today and tomorrow.
+You can see the price per hour for today and tomorrow.
 
 ## Screenshot
 
@@ -67,7 +67,7 @@ config: {
 }
 ```
 
-The `historyHours` max value is 24. However, you cannot show more history than back to midnight. Similarly, the `futureHours` max value is 48, but it cannot show more than the whole next day.
+The `historyHours` max value is 24. However, you cannot show more history than back to midnight. Similarly, the `futureHours` max value is 48, but it cannot show more than the whole next day. Also, the next day is not available until some time during the day.
 
 <hr/>
 

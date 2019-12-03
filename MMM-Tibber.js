@@ -80,7 +80,7 @@ Module.register("MMM-Tibber", {
         // Price chart
         const priceChart = document.createElement("div");
         priceChart.setAttribute("id", "pricechart");
-        priceChart.setAttribute("style", "width:600px; height:200px;");
+        priceChart.setAttribute("style", "width:700px; height:200px;");
 
         const tekst = document.createElement("p");
         tekst.innerHTML = "No Tibber data";
@@ -102,27 +102,26 @@ Module.register("MMM-Tibber", {
         let curPriceBackgroundColor
         let curPrice = prices.current
         let categories = [];
-        let data = prices.twoDays.map((p, i) => {
-            let ci = i < now ? 0 : i == now ? 1 : 2
-            if(i == now) {
-                curPriceBackgroundColor = this.config.columnColors[p.level][0];
-                curPrice = p.total // Must use this since reading from Tibber only once per hour
+        let data = [];
+
+        for(let i = 0; i < 48; i++) {
+            if(this.showHour(i, now)) {
+                let ci = i < now ? 0 : i == now ? 1 : 2
+                categories.push(twoDaysHours[i]);
+                if(prices.twoDays.length > i) {
+                    let p = prices.twoDays[i]
+                    data.push(
+                        {
+                            y: p.total,
+                            color: this.config.columnColors[p.level][ci],
+                            id: i == now ? 'cur' : '',
+                        }
+                    )
+                }
             }
-            return this.showHour(i, now)
-                ? 
-                    {
-                        y: p.total,
-                        color: this.config.columnColors[p.level][ci],
-                        id: i == now ? 'cur' : '',
-                    }
-                 : null
-        }).filter((p, i) => {
-            let res = p != null
-            if (res) {
-                categories.push(twoDaysHours[i])
-            }
-            return res;
-        })
+        }
+
+        
             
         Highcharts.chart('pricechart', {
             chart: {

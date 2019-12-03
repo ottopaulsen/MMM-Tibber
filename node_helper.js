@@ -39,6 +39,7 @@ module.exports = NodeHelper.create({
         tibber.getPrices(config.tibberToken)
         .then(res => {
             prices.current = res.current.total;
+            prices.twoDays = res.today;
             prices.twoDays = res.today.concat(res.tomorrow);
             this.log("Tibber prices: ", prices);
             this.sendSocketNotification('TIBBER_PRICE_DATA', prices);
