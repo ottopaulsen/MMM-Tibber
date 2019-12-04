@@ -117,6 +117,8 @@ Module.register("MMM-Tibber", {
                             id: i == now ? 'cur' : '',
                         }
                     )
+                } else {
+                    data.push({})
                 }
             }
         }
