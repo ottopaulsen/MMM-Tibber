@@ -22,27 +22,36 @@ module.exports = NodeHelper.create({
       this.loaded = true;
       let self = this;
 
-      this.readTibberPrices(config);
+      this.readTibberData(config);
       setInterval(function() {
-        self.readTibberPrices(config);
-      }, 1000 * 60 * 60); // Every hour
+        self.readTibberData(config);
+      }, 1000 * 60 * 5); // Every 5 minutes
     }
   },
 
-  readTibberPrices: function(config) {
-    this.log("readTibberPrices");
-    let prices = {
-      current: null,
-      twoDays: []
+  readTibberData: function(config) {
+    this.log("readTibberData");
+    let tibberData = {
+      consumption: [],
+      prices: {
+        current: null,
+        twoDays: []
+      }
     };
     tibber
-      .getPrices(config.tibberToken)
+      .getTibber(config.tibberToken, config.houseNumber, config.historyHours)
       .then(res => {
-        prices.current = res.current.total;
-        // prices.twoDays = res.today;
-        prices.twoDays = res.today.concat(res.tomorrow);
-        this.log("Tibber prices: ", prices);
-        this.sendSocketNotification("TIBBER_PRICE_DATA", prices);
+        this.log("Tibber data: ", res);
+        tibberData.prices.current = res.currentSubscription.priceInfo.current;
+        tibberData.prices.twoDays = res.currentSubscription.priceInfo.today.concat(
+          res.currentSubscription.priceInfo.tomorrow
+        );
+        if (res.consumption) {
+          tibberData.consumption = res.consumption.nodes.filter(n => {
+            return n.consumption != null;
+          });
+        }
+        this.sendSocketNotification("TIBBER_DATA", tibberData);
       })
       .catch(e => {
         console.log("Error getting tibber prices: ", e);
