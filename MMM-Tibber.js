@@ -5,11 +5,18 @@ Date.prototype.addHours = function(h) {
   return this;
 };
 
+let powerTickPositions = [];
+
 Module.register("MMM-Tibber", {
   getScripts: function() {
     return [
+      "dom.js",
+      "draw_tibber.js",
+      "draw_power_gauge.js",
       this.file("node_modules/highcharts/highcharts.js"),
-      this.file("node_modules/highcharts/modules/annotations.js")
+      this.file("node_modules/highcharts/highcharts-more.js"),
+      this.file("node_modules/highcharts/modules/annotations.js"),
+      this.file("node_modules/highcharts/modules/solid-gauge.js")
     ];
   },
 
@@ -19,7 +26,6 @@ Module.register("MMM-Tibber", {
     }
   },
 
-  // Default module config
   defaults: {
     // General
     tibberToken: "log in to tibber to find your token",
@@ -73,7 +79,37 @@ Module.register("MMM-Tibber", {
     // Min/Max consumption labels
     showMinConsumption: true,
     showMaxConsumption: true,
-    adjustConsumptionLabelsX: 0 // Adjust position sideways in pixels (pos or neg)
+    adjustConsumptionLabelsX: 0, // Adjust position sideways in pixels (pos or neg)
+    additionalCosts: [
+      {
+        label: "Nettleie",
+        unitPrice: 23.125
+      },
+      {
+        label: "Forbruksavgift",
+        unitPrice: 20.163
+      }
+    ],
+    showAdditionalCosts: true,
+    // Power gauge
+    showPowerGauge: true,
+    powerGauge: {
+      maxPower: 12000, // Max gauge value
+      markSize: 20, // Size of marks in % of sector area
+      labelFontSize: 14,
+      powerFontSize: 22,
+      titleFontSize: 16,
+      colors: [
+        // Colors for the graph
+        { fromValue: 0, color: "#00BB00" },
+        { fromValue: 3000, color: "#0000BB" },
+        { fromValue: 7000, color: "#BB0000" }
+      ],
+      minTickColor: "#00AA00",
+      avgTickColor: "#0000AA",
+      maxTickColor: "#AA0000",
+      title: "Power (W)"
+    }
   },
 
   start: function() {
@@ -86,17 +122,19 @@ Module.register("MMM-Tibber", {
   interval: null,
 
   socketNotificationReceived: function(notification, payload) {
-    var self = this;
-    if (notification === "TIBBER_DATA") {
-      if (payload != null) {
-        this.drawTibber(payload);
-        clearInterval(this.interval);
-        this.interval = setInterval(() => {
-          this.drawTibber(payload);
-        }, 30000);
-      } else {
-        console.log(self.name + ": TIBBER_DATA - No payload");
-      }
+    if (payload == null) {
+      console.log(self.name + ": " + notification + " - No payload");
+      return;
+    }
+    if (notification === "TIBBER_SUBSCRIPTION_DATA") {
+      this.log("Got sub data: ", payload);
+      this.updateSubData(payload);
+    } else if (notification === "TIBBER_DATA") {
+      drawTibber(payload, this.config);
+      clearInterval(this.interval);
+      this.interval = setInterval(() => {
+        drawTibber(payload, this.config);
+      }, 30000);
     }
   },
 
@@ -105,20 +143,17 @@ Module.register("MMM-Tibber", {
   },
 
   getDom: function() {
-    self = this;
-    const wrapper = document.createElement("div");
+    setTimeout(() => {
+      this.powerTickPositions = [0, 0, 0, 0, this.config.powerGauge.maxPower];
+      this.gaugesDrawing = this.config.showPowerGauge
+        ? drawPowerGauge(this.powerTickPositioner, this.config.powerGauge)
+        : null;
+    }, 100);
 
-    // Tibber chart
-    const tibberChart = document.createElement("div");
-    tibberChart.setAttribute("id", "tibberdata");
-    tibberChart.setAttribute("style", "width:700px; height:200px;");
-
-    const tekst = document.createElement("p");
-    tekst.innerHTML = "No Tibber data";
-    tibberChart.appendChild(tekst);
-
-    wrapper.appendChild(tibberChart);
-    return wrapper;
+    return dom(
+      this.config.showPrice || this.config.showConsumption,
+      this.config.showPowerGauge
+    );
   },
 
   showHour: function(hour, now) {
@@ -128,362 +163,49 @@ Module.register("MMM-Tibber", {
     );
   },
 
-  getMinPrice: function(prices) {
-    return prices.reduce((min, p) => (p.y < min ? p.y : min), prices[0].y);
+  updateSubData: function(subData) {
+    this.gaugesDrawing && this.updatePowerGauge(subData);
   },
 
-  getMaxPrice: function(prices) {
-    return prices.reduce((max, p) => (p.y > max ? p.y : max), prices[0].y);
-  },
-
-  getMinConsumption(consumption) {
-    return consumption.reduce(
-      (min, c) => (c.consumption < min ? c.consumption : min),
-      consumption[0] ? consumption[0].consumption : null
-    );
-  },
-
-  getMaxConsumption(consumption) {
-    return consumption.reduce(
-      (max, c) => (c.consumption > max ? c.consumption : max),
-      consumption[0] ? consumption[0].consumption : null
-    );
-  },
-
-  drawTibber: function(tibberData) {
-    const consumption = tibberData.consumption;
-    const prices = tibberData.prices;
-
-    const showFromTime = new Date().addHours(-this.config.historyHours - 1);
-    const showToTime = new Date().addHours(this.config.futureHours);
-
-    const minConsumption = this.getMinConsumption(consumption);
-    const maxConsumption = this.getMaxConsumption(consumption);
-    const consumptionUnit = tibberData.consumption[0]
-      ? tibberData.consumption[0].consumptionUnit
-      : "";
-
-    const firstPriceTime = prices.twoDays[0].startsAt;
-    const priceData = this.extractPriceDataFromConsumption(
-      consumption,
-      firstPriceTime
-    )
-      .concat(this.extractPriceDataFromPrices(prices))
-      .filter(p => {
-        return p.x >= showFromTime && p.x <= showToTime;
-      });
-
-    const minPrice = this.getMinPrice(priceData);
-    const maxPrice = this.getMaxPrice(priceData);
-
-    let curPriceBackgroundColor;
-    const curPrice = prices.current.total;
-
-    const consumptionData = this.extractConsumptionData(
-      consumption,
-      minConsumption,
-      maxConsumption
-    );
-
-    this.log("Consumption: ", consumptionData);
-
-    // Show time in local timezone
-    Highcharts.setOptions({
-      time: {
-        useUTC: false
-      }
+  updatePowerGauge: function(subData) {
+    const consumptionChart = this.gaugesDrawing;
+    const min1 = consumptionChart.series[0].points[0];
+    const min2 = consumptionChart.series[1].points[0];
+    const current = consumptionChart.series[2].points[0];
+    const avg1 = consumptionChart.series[3].points[0];
+    const avg2 = consumptionChart.series[4].points[0];
+    const max1 = consumptionChart.series[5].points[0];
+    const max2 = consumptionChart.series[6].points[0];
+    const stepSize = 120;
+    min1.update(subData.minPower - stepSize);
+    min2.update(subData.minPower + stepSize);
+    current.update({
+      y: subData.power,
+      color: this.getColor(this.config.powerGauge.colors, subData.power)
     });
+    avg1.update(subData.averagePower - stepSize);
+    avg2.update(subData.averagePower + stepSize);
+    max1.update(subData.maxPower - stepSize);
+    max2.update(subData.maxPower + stepSize);
 
-    Highcharts.chart("tibberdata", {
-      chart: {
-        zoomType: "xy",
-        backgroundColor: "#000000",
-        marginTop: 10 + this.config.adjustMargins.top,
-        marginLeft: 80 + this.config.adjustMargins.left,
-        marginRight: 60 + this.config.adjustMargins.right
-      },
-      title: {
-        text: ""
-      },
-      xAxis: {
-        type: "datetime",
-        labels: {
-          style: {
-            color: this.config.xAxisLabelColor
-          }
-        },
-        lineColor: this.config.xAxisLineColor
-      },
-      yAxis: [
-        {
-          // Primary yAxis (price, left)
-          startOnTick: false,
-          title: {
-            text: ""
-          },
-          gridLineColor: "#000000",
-          labels: {
-            style: {
-              color: "#000000"
-            }
-          },
-          min: 0,
-          max: Math.ceil(maxPrice * 10) / 10,
-          plotLines: [
-            {
-              // Min price line
-              color: this.config.minPriceColor,
-              width: this.config.showMinPrice
-                ? this.config.minPriceLineWidth
-                : 0,
-              value: minPrice,
-              zIndex: 9,
-              label: {
-                text: this.config.showMinPrice
-                  ? this.formatNumber(minPrice, this.config.priceDecimals) +
-                    " " +
-                    this.config.priceUnit
-                  : "",
-                align: "right",
-                verticalAlign: "top",
-                style: {
-                  color: this.config.minPriceColor,
-                  fontSize: this.config.priceFontSize
-                },
-                x: 57 + this.config.adjustPriceLabelsX,
-                y: 5
-              }
-            },
-            {
-              // Max price line
-              color: this.config.maxPriceColor,
-              width: this.config.showMaxPrice
-                ? this.config.maxPriceLineWidth
-                : 0,
-              value: maxPrice,
-              zIndex: 9,
-              label: {
-                text: this.config.showMaxPrice
-                  ? this.formatNumber(maxPrice, this.config.priceDecimals) +
-                    " " +
-                    this.config.priceUnit
-                  : "",
-                align: "right",
-                verticalAlign: "top",
-                style: {
-                  color: this.config.maxPriceColor,
-                  fontSize: this.config.priceFontSize
-                },
-                x: 57 + this.config.adjustPriceLabelsX,
-                y: 5
-              }
-            }
-          ]
-        },
-        {
-          // Secondary yAxis (consumption, right)
-          title: {
-            text: "Consumption",
-            style: {
-              color: "#000000"
-            }
-          },
-          labels: {
-            format: "{value} kWh",
-            style: {
-              color: "#000000"
-            }
-          },
-          gridLineColor: "#000000",
-          min: 0,
-          max: Math.ceil(maxConsumption),
-          opposite: true
-        }
-      ],
-      legend: {
-        enabled: false
-      },
-      plotOptions: {
-        column: {
-          pointPadding: 0.0,
-          groupPadding: 0.0,
-          borderWidth: 0
-        },
-        series: {
-          animation: false
-        }
-      },
-      series: [
-        this.config.showPrice
-          ? {
-              name: "Strømpris",
-              type: this.config.priceChartType,
-              step: "center",
-              color: this.config.priceColor,
-              zIndex: this.config.priceChartType === "column" ? 5 : 7,
-              lineWidth: this.config.priceLineWidth,
-              marker: {
-                enabled: false
-              },
-              data: priceData
-            }
-          : {},
-        this.config.showConsumption
-          ? {
-              name: "Forbruk",
-              type: this.config.consumptionChartType,
-              zIndex: this.config.consumptionChartType === "column" ? 5 : 7,
-              step: "center",
-              color: this.config.consumptionColor,
-              lineWidth: this.config.consumptionLineWidth,
-              marker: {
-                enabled: false
-              },
-              yAxis: 1,
-              data: consumptionData
-            }
-          : {}
-      ],
-      annotations: [
-        {
-          labels: [
-            {
-              // Current price
-              point: this.config.showCurrentPrice ? "cur" : "dontshow",
-              text:
-                this.formatNumber(curPrice, this.config.priceDecimals) +
-                " " +
-                this.config.priceUnit,
-              backgroundColor: curPriceBackgroundColor,
-              borderColor: this.config.curPriceColor,
-              y: -10,
-              style: {
-                color: this.config.curPriceColor,
-                fontSize: this.config.priceFontSize
-              },
-              zIndex: 15
-            },
-            {
-              // Min consumption
-              point: this.config.showMinConsumption
-                ? {
-                    x: -80 + this.config.adjustConsumptionLabelsX,
-                    y: minConsumption,
-                    yAxis: 1
-                  }
-                : "dontshow",
-              text:
-                this.formatNumber(
-                  minConsumption,
-                  this.config.consumptionDecimals
-                ) +
-                " " +
-                consumptionUnit,
-              backgroundColor: "#000",
-              borderColor: "#000",
-              y: 0,
-              align: "left",
-              verticalAlign: "middle",
-              crop: false,
-              overflow: "none",
-              style: {
-                color: this.config.consumptionColor,
-                fontSize: this.config.priceFontSize
-              }
-            },
-            {
-              // Max consumption
-              point: this.config.showMaxConsumption
-                ? {
-                    x: -80 + this.config.adjustConsumptionLabelsX,
-                    y: maxConsumption,
-                    yAxis: 1
-                  }
-                : "dontshow",
-              text:
-                this.formatNumber(
-                  maxConsumption,
-                  this.config.consumptionDecimals
-                ) +
-                " " +
-                consumptionUnit,
-              backgroundColor: "#000",
-              borderColor: "#000",
-              y: 0,
-              align: "left",
-              verticalAlign: "middle",
-              crop: false,
-              overflow: "none",
-              style: {
-                color: this.config.consumptionColor,
-                fontSize: this.config.priceFontSize
-              }
-            }
-          ]
-        }
-      ],
-      credits: {
-        enabled: false
-      }
-    });
+    // Set dynamic tick positions
+    powerTickPositions.splice(0, powerTickPositions.length);
+    powerTickPositions.push(0);
+    powerTickPositions.push(subData.minPower);
+    powerTickPositions.push(subData.averagePower);
+    powerTickPositions.push(subData.maxPower);
+    powerTickPositions.push(this.config.powerGauge.maxPower);
+    consumptionChart.yAxis[0].update();
   },
 
-  formatNumber: function(n, d) {
-    // Set number of decimals (d)
-    if (n == null) {
-      return "";
-    }
-    const x = Math.floor(n);
-    const y = Math.round((n - x) * Math.pow(10, d), 0);
-    return "" + x + this.config.decimalSeparator + y;
+  powerTickPositioner: function() {
+    return powerTickPositions;
   },
 
-  extractPriceDataFromConsumption: function(consumption, untilTime) {
-    return consumption
-      .filter(c => {
-        return c.to <= untilTime;
-      })
-      .map(c => {
-        return {
-          x: Date.parse(c.from),
-          y: c.unitPrice,
-          color: this.config.priceColumnColors["UNKNOWN"][0],
-          id: ""
-        };
-      });
-  },
-
-  extractPriceDataFromPrices: function(prices) {
-    return prices.twoDays.map(p => {
-      const now = Date.parse(prices.current.startsAt);
-      const t = Date.parse(p.startsAt);
-      const ci = t < now ? 0 : t === now ? 1 : 2;
-      return {
-        x: t,
-        y: p.total,
-        color: this.config.priceColumnColors[p.level][ci],
-        id: t === now ? "cur" : ""
-      };
-    });
-  },
-
-  extractConsumptionData: function(
-    consumption,
-    minConsumption,
-    maxConsumption
-  ) {
-    return consumption.map(c => {
-      let t = Date.parse(c.from);
-      return {
-        x: t,
-        y: c.consumption,
-        id:
-          c.consumption === maxConsumption
-            ? "maxCon"
-            : c.consumption === minConsumption
-            ? "minCon"
-            : ""
-      };
-    });
+  getColor(colors, value) {
+    // Find color from array based on value
+    return colors.reduce((color, cur, i, arr) => {
+      return value > cur.fromValue ? cur.color : color;
+    }, colors[0].color);
   }
 });

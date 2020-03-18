@@ -11,26 +11,43 @@ module.exports = NodeHelper.create({
 
   log: function(...args) {
     if (this.config.logging) {
-      console.log(args);
+      console.log(this.name + ": " + args);
     }
   },
 
   socketNotificationReceived: function(notification, payload) {
     if (notification === "TIBBER_CONFIG") {
-      var config = payload;
-      this.config = config;
-      this.loaded = true;
-      let self = this;
+      if (this.loaded) {
+        if (payload.tibberToken != this.config.tibberToken) {
+          console.error(
+            this.name +
+              ": Two or more different tibberTokens detected. That is not supported."
+          );
+        }
+        if (payload.houseNumber != this.config.houseNumber) {
+          console.error(
+            this.name + ": Two or more houseNumbers detected is not supported."
+          );
+        }
+      } else {
+        console.log(this.name + ": Configuring");
+        var config = payload;
+        this.config = config;
+        this.loaded = true;
+        const self = this;
 
-      this.readTibberData(config);
-      setInterval(function() {
-        self.readTibberData(config);
-      }, 1000 * 60 * 5); // Every 5 minutes
+        const sub = this.receiveTibberSubscriptionData.bind(this);
+        tibber.subscribe(config.tibberToken, config.houseNumber, sub);
+
+        this.readTibberData(config);
+        setInterval(function() {
+          self.readTibberData(config);
+        }, 1000 * 60 * 5); // Every 5 minutes
+      }
     }
   },
 
   readTibberData: function(config) {
-    this.log("readTibberData");
     let tibberData = {
       consumption: [],
       prices: {
@@ -54,7 +71,21 @@ module.exports = NodeHelper.create({
         this.sendSocketNotification("TIBBER_DATA", tibberData);
       })
       .catch(e => {
-        console.log("Error getting tibber prices: ", e);
+        console.error(this.name + ": Error getting tibber prices: ", e);
       });
+  },
+
+  receiveTibberSubscriptionData: function(data) {
+    const subData = JSON.parse(data);
+    if (subData.type == "data") {
+      this.sendSocketNotification(
+        "TIBBER_SUBSCRIPTION_DATA",
+        subData.payload.data.liveMeasurement
+      );
+    }
+  },
+
+  stop: function() {
+    tibber.close();
   }
 });

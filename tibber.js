@@ -1,12 +1,14 @@
 const RP = require("request-promise");
+const WebSocket = require("ws");
 
 const gqlEndpoint = "https://api.tibber.com/v1-beta/gql";
-// const subEndpoint = "wss://api.tibber.com/v1-beta/gql/subscriptions"
+const subEndpoint = "wss://api.tibber.com/v1-beta/gql/subscriptions";
 
 // Reference: https://developer.tibber.com/docs/reference#priceinfo
-const tibberQuery = `{ "query": "{  
+const tibberDataQuery = `{ "query": "{  
     viewer{  
       homes {
+        id
         address {
           address1
           postalCode
@@ -46,7 +48,25 @@ const tibberQuery = `{ "query": "{
     }  
  }" }`;
 
-exports.getTibber = function(tibberToken, homeNumber = 0, hoursHistory = 24) {
+const homesQuery = `{ "query": "{
+  viewer {
+    homes {
+      id
+      address {
+        address1
+        address2
+        address3
+        postalCode
+        city
+        country
+        latitude
+        longitude
+      }
+    }
+  }
+}" }`;
+
+tibberQuery = function(tibberToken, query) {
   return new Promise((resolve, reject) => {
     RP({
       headers: {
@@ -54,17 +74,130 @@ exports.getTibber = function(tibberToken, homeNumber = 0, hoursHistory = 24) {
         "Content-Type": "application/json"
       },
       uri: gqlEndpoint,
-      body: tibberQuery.replace(/\n/g, "").replace("HISTHOURS", hoursHistory),
+      body: query.replace(/\n/g, ""),
       method: "POST",
       resolveWithFullResponse: true,
       followRedirect: false
     })
       .then(res => {
-        resO = JSON.parse(res.body);
-        resolve(resO.data.viewer.homes[homeNumber]);
+        res = JSON.parse(res.body);
+        resolve(res);
       })
       .catch(e => {
         reject(e);
       });
+  });
+};
+
+exports.getTibber = function(tibberToken, homeNumber = 0, hoursHistory = 24) {
+  return new Promise((resolve, reject) => {
+    tibberQuery(tibberToken, tibberDataQuery.replace("HISTHOURS", hoursHistory))
+      .then(res => {
+        resolve(res.data.viewer.homes[homeNumber]);
+      })
+      .catch(e => {
+        reject(e);
+      });
+  });
+};
+
+exports.getHomes = function(tibberToken) {
+  return new Promise((resolve, reject) => {
+    tibberQuery(tibberToken, homesQuery)
+      .then(res => {
+        resolve(res.data.viewer.homes);
+      })
+      .catch(e => {
+        reject(e);
+      });
+  });
+};
+
+let socket;
+
+exports.close = function() {
+  if (socket) {
+    console.log("Closing Tibber socket");
+    socket.close();
+  } else {
+    console.error("Cannot close Tibber socket");
+  }
+};
+
+exports.subscribe = function(tibberToken, homeNumber, cb) {
+  const headers = {
+    Authorization: "Bearer " + tibberToken,
+    "Content-Type": "application/json"
+  };
+
+  this.getHomes(tibberToken).then(homes => {
+    const homeId = homes[homeNumber].id;
+    console.log("Home id for home ", homeNumber, " = ", homeId);
+
+    const initMsg = JSON.stringify({
+      type: "connection_init",
+      payload: "token=" + tibberToken
+    });
+
+    const startMsg = JSON.stringify({
+      id: "1",
+      type: "start",
+      payload: {
+        variables: {},
+        extensions: {},
+        operationName: null,
+        query:
+          `
+        subscription {
+          liveMeasurement(homeId: "` +
+          homeId +
+          `") {
+            timestamp
+            power
+            accumulatedConsumption
+            accumulatedCost
+            currency
+            minPower
+            averagePower
+            maxPower
+            voltagePhase1
+            voltagePhase2
+            voltagePhase3
+            currentL1
+            currentL2
+            currentL3
+          }
+        }
+      `
+      }
+    })
+      .replace(/ /g, "")
+      .replace(/\\n/g, ",");
+
+    if (socket) {
+      console.log("Closing Tibber socket.");
+      socket.close();
+    }
+    console.log("Opening Tibber socket");
+    socket = new WebSocket(subEndpoint, "graphql-ws", headers);
+
+    socket.on("error", function error(msg) {
+      console.error("Tibber socker error: ", msg);
+      console.error("Closing Tibber socket");
+      socket.close();
+    });
+
+    socket.on("open", function open() {
+      console.log("Tibber socket connected: ", socket.readyState);
+      socket.on("message", function incoming(data) {
+        console.log("Receiving message: ", data);
+        cb(data);
+        console.log("Sent to callback");
+      });
+      console.log("Initiating Tibber subscription");
+      socket.send(initMsg);
+      console.log("Subscription request: ", startMsg);
+      socket.send(startMsg);
+    });
   });
 };

@@ -9,8 +9,13 @@
   },
   "license": "MIT",
   "dependencies": {
-    "highcharts": "^7.2.0",
-    "request": "^2.88.0",
-    "request-promise": "^4.2.4"
+    "esm": "^3.2.25",
+    "graphql": "^14.6.0",
+    "graphql-subscriptions": "^1.1.0",
+    "graphql-subscriptions-client": "^0.12.0",
+    "graphql-yoga": "^1.18.3",
+    "highcharts": "^7.2.1",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.5"
   }
 }
