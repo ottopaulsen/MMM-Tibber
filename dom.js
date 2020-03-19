@@ -18,7 +18,7 @@ function dom(moduleId, showGraphs, showGauges) {
   // Pulse data
   const tibberPulse = document.createElement("div");
   tibberPulse.setAttribute("id", "gauges-" + moduleId);
-  tibberPulse.setAttribute("style", "width:350px; height:160px;");
+  tibberPulse.setAttribute("style", "width:350px; height:180px;");
 
   const tekst2 = document.createElement("p");
   tekst2.innerHTML = "No Pulse data";

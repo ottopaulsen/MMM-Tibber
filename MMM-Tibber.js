@@ -10,6 +10,7 @@ let powerTickPositions = [];
 Module.register("MMM-Tibber", {
   getScripts: function() {
     return [
+      "gauge_options.js",
       "dom.js",
       "draw_tibber.js",
       "draw_power_gauge.js",
@@ -149,7 +150,8 @@ Module.register("MMM-Tibber", {
         ? drawPowerGauge(
             this.identifier,
             this.powerTickPositioner,
-            this.config.powerGauge
+            this.config.powerGauge,
+            gaugeOptions(this.config.powerGauge)
           )
         : null;
     }, 100);
