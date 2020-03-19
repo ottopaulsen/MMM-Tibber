@@ -66,6 +66,8 @@ const homesQuery = `{ "query": "{
   }
 }" }`;
 
+let socket;
+
 tibberQuery = function(tibberToken, query) {
   return new Promise((resolve, reject) => {
     RP({
@@ -87,6 +89,29 @@ tibberQuery = function(tibberToken, query) {
         reject(e);
       });
   });
+};
+
+// noop = function() {};
+
+// heartbeat = function() {
+//   this.isAlive = true;
+// };
+
+// const interval = setInterval(function ping() {
+//   socket.clients.forEach(function each(ws) {
+//     if (ws.isAlive === false) return ws.terminate();
+
+//     ws.isAlive = false;
+//     ws.ping(noop);
+//   });
+// }, 30000);
+
+heartbeat = function() {
+  clearTimeout(this.pingTimeout);
+  this.pingTimeout = setTimeout(() => {
+    console.log("Terminating Tibber socket after timeout");
+    socket.terminate();
+  }, 10000);
 };
 
 exports.getTibber = function(tibberToken, homeNumber = 0, hoursHistory = 24) {
@@ -112,8 +137,6 @@ exports.getHomes = function(tibberToken) {
       });
   });
 };
-
-let socket;
 
 exports.close = function() {
   if (socket) {
@@ -189,15 +212,21 @@ exports.subscribe = function(tibberToken, homeNumber, cb) {
 
     socket.on("open", function open() {
       console.log("Tibber socket connected: ", socket.readyState);
+      heartbeat();
       socket.on("message", function incoming(data) {
         console.log("Receiving message: ", data);
         cb(data);
-        console.log("Sent to callback");
+        heartbeat();
       });
       console.log("Initiating Tibber subscription");
       socket.send(initMsg);
       console.log("Subscription request: ", startMsg);
       socket.send(startMsg);
+    });
+
+    socket.on("close", function close() {
+      console.log("Tibber socket disconnected");
+      clearTimeout(this.pingTimeout);
     });
   });
 };

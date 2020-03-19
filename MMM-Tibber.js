@@ -130,10 +130,10 @@ Module.register("MMM-Tibber", {
       this.log("Got sub data: ", payload);
       this.updateSubData(payload);
     } else if (notification === "TIBBER_DATA") {
-      drawTibber(payload, this.config);
+      drawTibber(this.identifier, payload, this.config);
       clearInterval(this.interval);
       this.interval = setInterval(() => {
-        drawTibber(payload, this.config);
+        drawTibber(this.identifier, payload, this.config);
       }, 30000);
     }
   },
@@ -146,11 +146,16 @@ Module.register("MMM-Tibber", {
     setTimeout(() => {
       this.powerTickPositions = [0, 0, 0, 0, this.config.powerGauge.maxPower];
       this.gaugesDrawing = this.config.showPowerGauge
-        ? drawPowerGauge(this.powerTickPositioner, this.config.powerGauge)
+        ? drawPowerGauge(
+            this.identifier,
+            this.powerTickPositioner,
+            this.config.powerGauge
+          )
         : null;
     }, 100);
 
     return dom(
+      this.identifier,
       this.config.showPrice || this.config.showConsumption,
       this.config.showPowerGauge
     );

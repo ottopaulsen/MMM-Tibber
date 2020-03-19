@@ -1,6 +1,6 @@
 "use strict";
 
-function drawTibber(tibberData, config) {
+function drawTibber(moduleId, tibberData, config) {
   const consumption = tibberData.consumption;
   const prices = tibberData.prices;
 
@@ -45,7 +45,7 @@ function drawTibber(tibberData, config) {
     }
   });
 
-  Highcharts.chart("tibberdata", {
+  Highcharts.chart("tibberdata-" + moduleId, {
     chart: {
       zoomType: "xy",
       backgroundColor: "#000000",
