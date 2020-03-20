@@ -159,7 +159,8 @@ Module.register("MMM-Tibber", {
     return dom(
       this.identifier,
       this.config.showPrice || this.config.showConsumption,
-      this.config.showPowerGauge
+      this.config.showPowerGauge,
+      this.config.showVoltageGauge
     );
   },
 

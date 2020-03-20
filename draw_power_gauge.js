@@ -1,13 +1,12 @@
 function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
-  console.log("drawing gauges");
+  console.log("drawing power");
   const innerRadius = 60;
   const radius = 100;
   const midRadius = radius - ((radius - innerRadius) * config.markSize) / 100;
 
   console.log("gaugeOptions: ", gaugeOptions);
-  // The consumption gauge
-  const consumptionChart = Highcharts.chart(
-    "gauges-" + moduleId,
+  const powerGauge = Highcharts.chart(
+    "power-" + moduleId,
     Highcharts.merge(gaugeOptions, {
       yAxis: {
         min: 0,
@@ -83,5 +82,5 @@ function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
       ]
     })
   );
-  return consumptionChart;
+  return powerGauge;
 }

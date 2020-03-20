@@ -1,32 +1,44 @@
 "use strict";
 
-function dom(moduleId, showGraphs, showGauges) {
+function dom(moduleId, showGraphs, showPower, showVoltage) {
   const wrapper = document.createElement("div");
 
   const span1 = document.createElement("span");
   const span2 = document.createElement("span");
+  const span3 = document.createElement("span");
 
   // Tibber chart
-  const tibberChart = document.createElement("div");
-  tibberChart.setAttribute("id", "tibberdata-" + moduleId);
-  tibberChart.setAttribute("style", "width:700px; height:200px;");
+  const graphs = document.createElement("div");
+  graphs.setAttribute("id", "tibberdata-" + moduleId);
+  graphs.setAttribute("style", "width:700px; height:200px;");
 
   const tekst1 = document.createElement("p");
   tekst1.innerHTML = "No Tibber data";
-  tibberChart.appendChild(tekst1);
+  graphs.appendChild(tekst1);
 
-  // Pulse data
-  const tibberPulse = document.createElement("div");
-  tibberPulse.setAttribute("id", "gauges-" + moduleId);
-  tibberPulse.setAttribute("style", "width:350px; height:180px;");
+  // Power
+  const power = document.createElement("div");
+  power.setAttribute("id", "power-" + moduleId);
+  power.setAttribute("style", "width:350px; height:180px;");
 
   const tekst2 = document.createElement("p");
   tekst2.innerHTML = "No Pulse data";
-  tibberPulse.appendChild(tekst2);
+  power.appendChild(tekst2);
 
-  span1.appendChild(tibberChart);
-  span2.appendChild(tibberPulse);
+  // Voltage
+  const voltage = document.createElement("div");
+  voltage.setAttribute("id", "voltage-" + moduleId);
+  voltage.setAttribute("style", "width:350px; height:180px;");
+
+  const tekst2 = document.createElement("p");
+  tekst2.innerHTML = "No Pulse data";
+  voltage.appendChild(tekst2);
+
+  span1.appendChild(graphs);
+  span2.appendChild(power);
+  span3.appendChild(voltage);
   showGraphs && wrapper.appendChild(span1);
-  showGauges && wrapper.appendChild(span2);
+  showPower && wrapper.appendChild(span2);
+  showVoltage && wrapper.appendChild(span3);
   return wrapper;
 }
