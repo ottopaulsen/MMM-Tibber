@@ -3,16 +3,13 @@
 function drawTibber(moduleId, tibberData, config) {
   const consumption = tibberData.consumption;
   const prices = tibberData.prices;
-
   const showFromTime = new Date().addHours(-config.historyHours - 1);
   const showToTime = new Date().addHours(config.futureHours);
-
   const minConsumption = getMinConsumption(consumption);
   const maxConsumption = getMaxConsumption(consumption);
   const consumptionUnit = tibberData.consumption[0]
     ? tibberData.consumption[0].consumptionUnit
     : "";
-
   const firstPriceTime = prices.twoDays[0].startsAt;
   const priceData = extractPriceDataFromConsumption(
     consumption,
@@ -49,9 +46,9 @@ function drawTibber(moduleId, tibberData, config) {
     chart: {
       zoomType: "xy",
       backgroundColor: "#000000",
-      marginTop: 10 + config.adjustMargins.top,
-      marginLeft: 80 + config.adjustMargins.left,
-      marginRight: 60 + config.adjustMargins.right
+      marginTop: 10 + config.adjustTopMargin,
+      marginLeft: 80 + config.adjustLeftMargin,
+      marginRight: 60 + config.adjustRightMargin
     },
     title: {
       text: ""

@@ -133,6 +133,7 @@ exports.close = function() {
   closing = true;
   if (socket) {
     console.log("Closing (terminating) Tibber socket");
+    socket.close();
     socket.terminate(); // Change to close when stable
   } else {
     console.error("Cannot close Tibber socket");

@@ -14,6 +14,8 @@ Module.register("MMM-Tibber", {
       "dom.js",
       "draw_tibber.js",
       "draw_power_gauge.js",
+      "draw_voltage_gauge.js",
+      "draw_current_gauge.js",
       this.file("node_modules/highcharts/highcharts.js"),
       this.file("node_modules/highcharts/highcharts-more.js"),
       this.file("node_modules/highcharts/modules/annotations.js"),
@@ -32,16 +34,17 @@ Module.register("MMM-Tibber", {
     tibberToken: "log in to tibber to find your token",
     houseNumber: 0, // If you have more than one Tibber subscription
     logging: false,
+    adjustSize: -30, // + or - %
     historyHours: 24,
     futureHours: 48,
     // Chart
     xAxisLineColor: "#333333",
     xAxisLabelColor: "#999999",
-    adjustMargins: {
-      left: 0,
-      right: 0,
-      top: 0
-    },
+    adjustLeftMargin: 0,
+    adjustRightMargin: 0,
+    adjustTopMargin: 0,
+    graphWidth: null,
+    graphHeight: 200,
     // Price curve
     showPrice: true,
     priceChartType: "line", // column, line or spline
@@ -94,27 +97,76 @@ Module.register("MMM-Tibber", {
     showAdditionalCosts: true,
     // Power gauge
     showPowerGauge: true,
-    powerGauge: {
-      maxPower: 12000, // Max gauge value
-      markSize: 20, // Size of marks in % of sector area
-      labelFontSize: 14,
-      powerFontSize: 22,
-      titleFontSize: 16,
-      colors: [
-        // Colors for the graph
-        { fromValue: 0, color: "#00BB00" },
-        { fromValue: 3000, color: "#0000BB" },
-        { fromValue: 7000, color: "#BB0000" }
-      ],
-      minTickColor: "#00AA00",
-      avgTickColor: "#0000AA",
-      maxTickColor: "#AA0000",
-      title: "Power (W)"
-    }
+    powerGaugeMaxValue: null, // Max gauge value. Calculated by default.
+    powerGaugeMarkSize: 20, // Size of marks in % of sector area
+    powerGaugeMinTickColor: "#00AA00",
+    powerGaugeAvgTickColor: "#0000AA",
+    powerGaugeMaxTickColor: "#AA0000",
+    powerGaugeTitle: "Power (W)",
+    powerGaugeColors: [
+      // Colors for the graph
+      { fromValue: 0, color: "#00BB00" },
+      { fromValue: 3000, color: "#0000BB" },
+      { fromValue: 7000, color: "#BB0000" }
+    ],
+    // Voltage gauge
+    showVoltageGauge: true,
+    voltageGaugeName: "voltage",
+    voltageGaugeTitle: "Voltage (V)",
+    voltageGaugeNominalValue: 220,
+    voltageGaugeMaxValue: 250,
+    voltageGaugeMinValue: 150,
+    voltageGaugeColors: [
+      // Colors for the graph
+      { fromValue: 0, color: "#BB0000" },
+      { fromValue: 200, color: "#0000BB" },
+      { fromValue: 215, color: "#00BB00" },
+      { fromValue: 230, color: "#0000BB" },
+      { fromValue: 235, color: "#BB0000" }
+    ],
+    // Current gauge
+    showCurrentGauge: true,
+    currentGaugeName: "current",
+    currentGaugeTitle: "Current (A)",
+    currentGaugeNominalValue: 65, // Main fuse
+    currentGaugeMaxValue: 70,
+    currentGaugeMinValue: 0,
+    currentGaugeColors: [
+      // Colors for the graph
+      { fromValue: 0, color: "#00BB00" },
+      { fromValue: 50, color: "#0000BB" },
+      { fromValue: 63, color: "#BB0000" }
+    ],
+    // Gauges common
+    gaugesVertical: false,
+    gaugesAbove: true,
+    gaugesWidth: 230,
+    gaugesHeight: 120,
+    gaugesValueFontSize: 17,
+    gaugesValueFontSize3phase: 14,
+    gaugesValueDistanceAdjustment: 0,
+    gaugesLabelFontSize: 12,
+    gaugesTitleFontSize: 12,
+    // Accumulated data
+    showAccumulated: true,
+    accumulatedPowerUnit: "kWh",
+    accumulatedCostCurrency: "Kr",
+    accumulatedLabelColor: "#666666",
+    accumulatedValueColor: "#e6e600"
   },
 
   start: function() {
-    console.log(this.name + " started.");
+    Log.info(this.name + " started.");
+
+    // Set max power
+    if (!this.config.powerGaugeMaxValue) {
+      const max =
+        this.config.voltageGaugeNominalValue *
+        this.config.currentGaugeNominalValue;
+      this.config.powerGaugeMaxValue = Math.floor((max + 1200) / 1000) * 1000;
+      Log.info("Setting max power to " + this.config.powerGaugeMaxValue);
+    }
+
     this.loaded = true;
     this.updateDom();
     this.sendSocketNotification("TIBBER_CONFIG", this.config);
@@ -124,18 +176,20 @@ Module.register("MMM-Tibber", {
 
   socketNotificationReceived: function(notification, payload) {
     if (payload == null) {
-      console.log(self.name + ": " + notification + " - No payload");
+      Log.warn(self.name + ": " + notification + " - No payload");
       return;
     }
     if (notification === "TIBBER_SUBSCRIPTION_DATA") {
       this.log("Got sub data: ", payload);
       this.updateSubData(payload);
     } else if (notification === "TIBBER_DATA") {
-      drawTibber(this.identifier, payload, this.config);
-      clearInterval(this.interval);
-      this.interval = setInterval(() => {
+      if (this.config.showConsumption || this.config.showPrice) {
+        clearInterval(this.interval);
         drawTibber(this.identifier, payload, this.config);
-      }, 30000);
+        this.interval = setInterval(() => {
+          drawTibber(this.identifier, payload, this.config);
+        }, 30000);
+      }
     }
   },
 
@@ -145,23 +199,34 @@ Module.register("MMM-Tibber", {
 
   getDom: function() {
     setTimeout(() => {
-      this.powerTickPositions = [0, 0, 0, 0, this.config.powerGauge.maxPower];
-      this.gaugesDrawing = this.config.showPowerGauge
+      this.powerTickPositions = [0, 0, 0, 0, this.config.powerGaugeMaxValue];
+      this.powerDrawing = this.config.showPowerGauge
         ? drawPowerGauge(
             this.identifier,
             this.powerTickPositioner,
-            this.config.powerGauge,
-            gaugeOptions(this.config.powerGauge)
+            this.config,
+            gaugeOptions(this.config)
           )
         : null;
-    }, 100);
+      this.voltageDrawing = this.config.showVoltageGauge
+        ? drawVoltageGauge(
+            this.identifier,
+            this.config,
+            gaugeOptions(this.config),
+            this.is3phase()
+          )
+        : null;
+      this.currentDrawing = this.config.showCurrentGauge
+        ? drawCurrentGauge(
+            this.identifier,
+            this.config,
+            gaugeOptions(this.config),
+            this.is3phase()
+          )
+        : null;
+    }, 500);
 
-    return dom(
-      this.identifier,
-      this.config.showPrice || this.config.showConsumption,
-      this.config.showPowerGauge,
-      this.config.showVoltageGauge
-    );
+    return dom(this.identifier, this.config);
   },
 
   showHour: function(hour, now) {
@@ -172,29 +237,42 @@ Module.register("MMM-Tibber", {
   },
 
   updateSubData: function(subData) {
-    this.gaugesDrawing && this.updatePowerGauge(subData);
+    this.powerDrawing && this.updatePowerGauge(subData);
+    this.voltageDrawing && this.updateVoltageGauge(subData);
+    this.currentDrawing && this.updateCurrentGauge(subData);
+    this.config.showAccumulated && this.updateAccumulated(subData);
   },
 
   updatePowerGauge: function(subData) {
-    const consumptionChart = this.gaugesDrawing;
-    const min1 = consumptionChart.series[0].points[0];
-    const min2 = consumptionChart.series[1].points[0];
-    const current = consumptionChart.series[2].points[0];
-    const avg1 = consumptionChart.series[3].points[0];
-    const avg2 = consumptionChart.series[4].points[0];
-    const max1 = consumptionChart.series[5].points[0];
-    const max2 = consumptionChart.series[6].points[0];
+    const gauge = this.powerDrawing;
+    const min1 = gauge.series[0].points[0];
+    const min2 = gauge.series[1].points[0];
+    const current = gauge.series[2].points[0];
+    const avg1 = gauge.series[3].points[0];
+    const avg2 = gauge.series[4].points[0];
+    const max1 = gauge.series[5].points[0];
+    const max2 = gauge.series[6].points[0];
     const stepSize = 120;
     min1.update(subData.minPower - stepSize);
     min2.update(subData.minPower + stepSize);
     current.update({
       y: subData.power,
-      color: this.getColor(this.config.powerGauge.colors, subData.power)
+      color: this.getColor(this.config.powerGaugeColors, subData.power)
     });
     avg1.update(subData.averagePower - stepSize);
     avg2.update(subData.averagePower + stepSize);
     max1.update(subData.maxPower - stepSize);
     max2.update(subData.maxPower + stepSize);
+
+    if (subData.maxPower > this.config.powerGaugeMaxValue) {
+      Log.error(
+        "Actual max power (" +
+          subData.maxPower +
+          ") larger than configured max power (" +
+          this.powerDrawing.yAxis[0].max +
+          ")"
+      );
+    }
 
     // Set dynamic tick positions
     powerTickPositions.splice(0, powerTickPositions.length);
@@ -202,17 +280,127 @@ Module.register("MMM-Tibber", {
     powerTickPositions.push(subData.minPower);
     powerTickPositions.push(subData.averagePower);
     powerTickPositions.push(subData.maxPower);
-    powerTickPositions.push(this.config.powerGauge.maxPower);
-    consumptionChart.yAxis[0].update();
+    powerTickPositions.push(this.config.powerGaugeMaxValue);
+    gauge.yAxis[0].update();
   },
 
   powerTickPositioner: function() {
     return powerTickPositions;
   },
 
+  v1: null,
+  v2: 198,
+  v3: null,
+
+  is3phase: function() {
+    return !!this.v3;
+  },
+
+  updateVoltageGauge: function(subData) {
+    if (!this.v1 && subData.voltagePhase1) {
+      this.v3 = 220;
+      // First time voltage received. Draw again to get right number of phases.
+      this.voltageDrawing = this.config.showVoltageGauge
+        ? drawVoltageGauge(
+            this.identifier,
+            this.config,
+            gaugeOptions(this.config),
+            this.is3phase()
+          )
+        : null;
+    }
+    this.v1 = subData.voltagePhase1 || this.v1;
+    this.v2 = subData.voltagePhase2 || this.v2;
+    this.v3 = subData.voltagePhase3 || this.v3;
+    const gauge = this.voltageDrawing;
+    const phase1 = gauge.series[0].points[0];
+    const phase2 = gauge.series[1].points[0];
+    const phase3 = gauge.series[2].points[0];
+    this.v1 &&
+      phase1.update({
+        y: Math.round(this.v1),
+        color: this.getColor(this.config.voltageGaugeColors, this.v1)
+      });
+    this.v2 &&
+      phase2.update({
+        y: Math.round(this.v2),
+        color: this.getColor(this.config.voltageGaugeColors, this.v2)
+      });
+    this.v3 &&
+      phase3.update({
+        y: Math.round(this.v3),
+        color: this.getColor(this.config.voltageGaugeColors, this.v3)
+      });
+  },
+
+  c1: null,
+  c2: 45,
+  c3: null,
+
+  updateCurrentGauge: function(subData) {
+    if (!this.c1 && subData.currentL1) {
+      this.c3 = 14;
+      this.v3 = 245;
+      // First time curent received. Draw again to get right number of phases.
+      this.currentDrawing = this.config.showCurrentGauge
+        ? drawCurrentGauge(
+            this.identifier,
+            this.config,
+            gaugeOptions(this.config),
+            this.is3phase()
+          )
+        : null;
+    }
+    this.c1 = subData.currentL1 || this.c1;
+    this.c2 = subData.currentL2 || this.c2;
+    this.c3 = subData.currentL3 || this.c3;
+    const gauge = this.currentDrawing;
+    const phase1 = gauge.series[0].points[0];
+    const phase2 = gauge.series[1].points[0];
+    const phase3 = gauge.series[2].points[0];
+    this.c1 &&
+      phase1.update({
+        y: Math.round(this.c1),
+        color: this.getColor(this.config.currentGaugeColors, this.c1)
+      });
+    this.c2 &&
+      phase2.update({
+        y: Math.round(this.c2),
+        color: this.getColor(this.config.currentGaugeColors, this.c2)
+      });
+    this.c3 &&
+      phase3.update({
+        y: Math.round(this.c3),
+        color: this.getColor(this.config.currentGaugeColors, this.c3)
+      });
+  },
+
+  updateAccumulated: function(subData) {
+    const accPower = document.getElementById(
+      "acc-power-" + this.identifier + "-value"
+    );
+    accPower.innerHTML = Math.round(subData.accumulatedConsumption);
+
+    const accPowerUnit = document.getElementById(
+      "acc-power-" + this.identifier + "-unit"
+    );
+    accPowerUnit.innerHTML = this.config.accumulatedPowerUnit;
+
+    const accCost = document.getElementById(
+      "acc-cost-" + this.identifier + "-value"
+    );
+    accCost.innerHTML = Math.round(subData.accumulatedCost);
+
+    const accCostUnit = document.getElementById(
+      "acc-cost-" + this.identifier + "-unit"
+    );
+    accCostUnit.innerHTML =
+      this.config.accumulatedCostCurrency || subData.currency;
+  },
+
   getColor(colors, value) {
     // Find color from array based on value
-    return colors.reduce((color, cur, i, arr) => {
+    return colors.reduce((color, cur) => {
       return value > cur.fromValue ? cur.color : color;
     }, colors[0].color);
   }

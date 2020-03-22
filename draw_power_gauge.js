@@ -1,20 +1,25 @@
 function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
-  console.log("drawing power");
   const innerRadius = 60;
   const radius = 100;
-  const midRadius = radius - ((radius - innerRadius) * config.markSize) / 100;
+  const midRadius =
+    radius - ((radius - innerRadius) * config.powerGaugeMarkSize) / 100;
 
-  console.log("gaugeOptions: ", gaugeOptions);
   const powerGauge = Highcharts.chart(
     "power-" + moduleId,
     Highcharts.merge(gaugeOptions, {
       yAxis: {
         min: 0,
-        max: config.maxPower,
+        max: config.powerGaugeMaxValue,
         title: {
-          text: config.title
+          text: config.powerGaugeTitle
         },
-        tickPositioner: tickPositioner
+        tickPositioner: tickPositioner,
+        labels: {
+          distance: 18,
+          formatter: function() {
+            return (this.value / 1000).toFixed(1);
+          }
+        }
       },
 
       credits: {
@@ -31,7 +36,7 @@ function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
         },
         {
           name: "Min2",
-          data: [{ y: 0, color: config.minTickColor }],
+          data: [{ y: 0, color: config.powerGaugeMinTickColor }],
           zIndex: 10,
           innerRadius: midRadius,
           radius: radius - 1
@@ -46,7 +51,7 @@ function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
             format:
               '<div style="text-align:center">' +
               '<span style="font-size:' +
-              config.powerFontSize +
+              config.gaugesValueFontSize +
               'px">{y}</span><br/>' +
               "</div>"
           }
@@ -60,7 +65,7 @@ function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
         },
         {
           name: "Avg2",
-          data: [{ y: 0, color: config.avgTickColor }],
+          data: [{ y: 0, color: config.powerGaugeAvgTickColor }],
           zIndex: 7,
           innerRadius: midRadius,
           radius: radius - 1
@@ -74,7 +79,7 @@ function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
         },
         {
           name: "Max2",
-          data: [{ y: 0, color: config.maxTickColor }],
+          data: [{ y: 0, color: config.powerGaugeMaxTickColor }],
           zIndex: 3,
           innerRadius: midRadius,
           radius: radius - 1

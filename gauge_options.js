@@ -31,16 +31,12 @@ const gaugeOptions = function(config) {
       title: {
         y: 25,
         style: {
-          fontSize: config.titleFontSize
+          fontSize: config.gaugesTitleFontSize
         }
       },
       labels: {
-        distance: 18,
-        formatter: function() {
-          return (this.value / 1000).toFixed(1);
-        },
         style: {
-          fontSize: config.labelFontSize + "px"
+          fontSize: config.gaugesLabelFontSize + "px"
         }
       }
     },
@@ -49,7 +45,7 @@ const gaugeOptions = function(config) {
       solidgauge: {
         dataLabels: {
           enabled: false,
-          y: 5,
+          y: 25,
           borderWidth: 0,
           useHTML: true,
           style: { color: "#777" }
