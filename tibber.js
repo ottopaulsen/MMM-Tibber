@@ -217,7 +217,7 @@ connect = function() {
     console.log("Tibber socket connected: ", socket.readyState);
     heartbeat();
     socket.on("message", function incoming(data) {
-      console.log("Receiving message: ", data);
+      // console.log("Receiving message: ", data);
       callback(data);
       heartbeat();
     });

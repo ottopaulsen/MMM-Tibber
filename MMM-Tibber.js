@@ -41,7 +41,7 @@ Module.register("MMM-Tibber", {
     graphHeight: 200,
     // Price curve
     showPrice: true,
-    priceChartType: "line", // column, line or spline
+    priceChartType: "column", // column, line or spline
     priceLineWidth: 3, // For line and spline, not column
     priceColor: "#cc0000", // For line and spline
     priceColumnColors: {
@@ -55,14 +55,14 @@ Module.register("MMM-Tibber", {
     },
     // Consumption curve
     showConsumption: true,
-    consumptionChartType: "column", // column, line or spline
+    consumptionChartType: "line", // column, line or spline
     consumptionLineWidth: 2, // For line and spline
     consumptionColor: "#ffcc00", // For line and spline
     consumptionDecimals: 1,
     // Price label and min/max price text
     priceUnit: "kr",
     decimalSeparator: ",",
-    priceFontSize: 16,
+    graphLabelFontSize: 16,
     priceDecimals: 2,
     showCurrentPrice: true,
     curPriceColor: "#ff7733",
@@ -78,17 +78,21 @@ Module.register("MMM-Tibber", {
     showMinConsumption: true,
     showMaxConsumption: true,
     adjustConsumptionLabelsX: 0, // Adjust position sideways in pixels (pos or neg)
-    additionalCosts: [
+    additionalCostPerKWH: [
       {
         label: "Nettleie",
-        unitPrice: 23.125
+        price: 0.23125
       },
       {
         label: "Forbruksavgift",
-        unitPrice: 20.163
+        price: 0.20163
       }
     ],
-    showAdditionalCosts: true,
+    showAdditionalCostsGraph: true,
+    additionalCostsLabelColor: "#888888",
+    additionalCostsLabelAdjustX: 0, // Adjust label position
+    additionalCostsLabelAdjustY: 0, // Adjust label position
+    includeAdditionalCostsInPrice: true,
     // Power gauge
     showPowerGauge: true,
     powerGaugeMaxValue: null, // Max gauge value. Calculated by default.
@@ -122,7 +126,7 @@ Module.register("MMM-Tibber", {
     showCurrentGauge: true,
     currentGaugeName: "current",
     currentGaugeTitle: "",
-    currentGaugeNominalValue: 65, // Main fuse
+    currentGaugeNominalValue: 63, // Main fuse
     currentGaugeMaxValue: 70,
     currentGaugeMinValue: 0,
     currentGaugeColors: [
@@ -210,9 +214,12 @@ Module.register("MMM-Tibber", {
       return;
     }
     if (notification === "TIBBER_SUBSCRIPTION_DATA") {
-      this.log("Got sub data: ", payload);
+      this.log("Got sub data: ");
+      this.log(payload);
       this.updateSubData(payload);
     } else if (notification === "TIBBER_DATA") {
+      this.log("Got Tibber data: ");
+      this.log(payload);
       if (this.config.showConsumption || this.config.showPrice) {
         clearInterval(this.interval);
         drawTibber(this.identifier, payload, this.config);
@@ -435,7 +442,12 @@ Module.register("MMM-Tibber", {
     const accumulatedCost = document.getElementById(
       "acc-cost-" + this.identifier + "-value"
     );
-    accumulatedCost.innerHTML = Math.round(subData.accumulatedCost);
+    accumulatedCost.innerHTML = Math.round(
+      subData.accumulatedCost +
+        (this.config.includeAdditionalCostsInPrice
+          ? sumAdditionalCosts(this.config) * subData.accumulatedConsumption
+          : 0)
+    );
 
     const accumulatedCostUnit = document.getElementById(
       "acc-cost-" + this.identifier + "-unit"
