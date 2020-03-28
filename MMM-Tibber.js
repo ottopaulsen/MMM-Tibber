@@ -337,8 +337,8 @@ Module.register("MMM-Tibber", {
   },
 
   v1: null,
-  v2: null,
-  v3: null,
+  v2: 220,
+  v3: 228,
 
   is3phase: function() {
     return !!this.v3;
@@ -384,8 +384,8 @@ Module.register("MMM-Tibber", {
   },
 
   c1: null,
-  c2: null,
-  c3: null,
+  c2: 22,
+  c3: 43,
 
   updateCurrentGauge: function(subData) {
     if (!this.c1 && subData.currentL1) {
