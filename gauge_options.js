@@ -29,7 +29,7 @@ const gaugeOptions = function(config) {
       tickAmount: 2,
       categories: [],
       title: {
-        y: 25,
+        y: 28,
         style: {
           fontSize: config.gaugesTitleFontSize
         }

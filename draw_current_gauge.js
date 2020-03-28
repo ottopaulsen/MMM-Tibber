@@ -1,4 +1,4 @@
-function drawCurrentGauge(moduleId, config, gaugeOptions, is3phase) {
+function drawCurrentGauge(moduleId, config, gaugeOptions, is3phase, translate) {
   const innerRadius3 = 60;
   const radius = 100;
   const innerRadius2 = innerRadius3 + (radius - innerRadius3) / 3;
@@ -21,7 +21,7 @@ function drawCurrentGauge(moduleId, config, gaugeOptions, is3phase) {
           config.currentGaugeMaxValue
         ],
         title: {
-          text: config.currentGaugeTitle
+          text: config.currentGaugeTitle || translate("CURRENT") + " (A)"
         },
         labels: {
           distance: 18,

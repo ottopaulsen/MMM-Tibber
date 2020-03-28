@@ -358,7 +358,10 @@ function formatNumber(n, d, decimalSeparator) {
   if (n == null) {
     return "";
   }
-  const x = Math.floor(n);
-  const y = "" + (n - x);
-  return "" + x + decimalSeparator + y.substr(2, d);
+  const exp = Math.pow(10, d);
+  const i = Math.round(n * exp);
+  const x = Math.floor(i / exp);
+  const y = "" + (i / exp - x);
+  console.log("x = " + x + ", y = " + y + ", d = " + d);
+  return "" + x + decimalSeparator + y.substr(2, d).padEnd(d, "0");
 }

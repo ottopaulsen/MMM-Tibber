@@ -1,4 +1,10 @@
-function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
+function drawPowerGauge(
+  moduleId,
+  tickPositioner,
+  config,
+  gaugeOptions,
+  translate
+) {
   const innerRadius = 60;
   const radius = 100;
   const midRadius =
@@ -11,7 +17,7 @@ function drawPowerGauge(moduleId, tickPositioner, config, gaugeOptions) {
         min: 0,
         max: config.powerGaugeMaxValue,
         title: {
-          text: config.powerGaugeTitle
+          text: config.powerGaugeTitle || translate("POWER") + " (W)"
         },
         tickPositioner: tickPositioner,
         labels: {

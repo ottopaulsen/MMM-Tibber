@@ -1,11 +1,11 @@
 "use strict";
 
-function dom(moduleId, config) {
+function dom(moduleId, config, translate) {
   const showGraphs = config.showPrice || config.showConsumption;
   const showPower = config.showPowerGauge;
   const showVoltage = config.showVoltageGauge;
   const showCurrent = config.showCurrentGauge;
-  const showAccumulated = config.showAccumulated;
+  const showTable = config.showTable;
   const gaugeStyle =
     "width:" +
     config.gaugesWidth +
@@ -17,6 +17,8 @@ function dom(moduleId, config) {
   const wrapper = document.createElement("div");
 
   const name = moduleId.substr(moduleId.indexOf("MMM"));
+
+  Log.info("Translating CURRENT in dom() to " + translate("CURRENT"));
 
   // Tibber chart
   const graphs = document.createElement("div");
@@ -64,57 +66,79 @@ function dom(moduleId, config) {
   current.appendChild(defaultTextCurrent);
   spanCurrent.appendChild(current);
 
-  // Accumulated
-  const accumulated = document.createElement("div");
-  accumulated.setAttribute("id", "accumulated-" + moduleId);
-  accumulated.style.width = 700;
+  // Table
+  const table = document.createElement("div");
+  table.setAttribute("id", "table-" + moduleId);
+  table.setAttribute(
+    "style",
+    "width: " + config.tableWidth + "px; padding-above: 30px;"
+  );
 
-  const accTable = document.createElement("table");
-  accTable.className = "small";
-  const accRow = document.createElement("tr");
+  const tTable = document.createElement("table");
+  tTable.className = "small";
+  const tRow = document.createElement("tr");
+  const columnElementType = config.tableVertical ? "tr" : "td";
 
-  addAccumulated(accRow, "Power today", "acc-power-" + moduleId, config);
-  addAccumulated(accRow, "Cost today", "acc-cost-" + moduleId, config);
+  const tCol1 = document.createElement(columnElementType);
+  addTable(tCol1, translate("POWER TODAY"), "acc-power-" + moduleId, config);
+  tRow.appendChild(tCol1);
 
-  accTable.appendChild(accRow);
-  accumulated.appendChild(accTable);
+  // const tCol2 = document.createElement(columnElementType);
+  // addTable(tCol2, "Current price", "current-price-" + moduleId, config);
+  // tRow.appendChild(tCol2);
+
+  const tCol3 = document.createElement(columnElementType);
+  addTable(tCol3, translate("COST TODAY"), "acc-cost-" + moduleId, config);
+  tRow.appendChild(tCol3);
+
+  tTable.appendChild(tRow);
+  table.appendChild(tTable);
 
   // Build
   showGraphs && !config.gaugesAbove && wrapper.appendChild(graphs);
   showPower && wrapper.appendChild(spanPower);
   showVoltage && wrapper.appendChild(spanVoltage);
   showCurrent && wrapper.appendChild(spanCurrent);
-  showAccumulated && wrapper.appendChild(accumulated);
   showGraphs && config.gaugesAbove && wrapper.appendChild(graphs);
+  showTable && wrapper.appendChild(table);
 
   return wrapper;
 }
 
-function addAccumulated(accRow, labelText, id, config) {
+function addTable(tRow, labelText, id, config) {
   // Label
   const label = document.createElement("td");
   label.innerHTML = labelText + ": ";
   label.className = "align-left small-dimmed";
-  label.style.color = config.accumulatedLabelColor;
-  label.style.whiteSpace = "nowrap";
-  accRow.appendChild(label);
+  label.setAttribute(
+    "style",
+    "white-space: nowrap; padding-left: 20px; color: " +
+      config.tableLabelColor +
+      ";"
+  );
+  tRow.appendChild(label);
 
   // Value
   const value = document.createElement("td");
   value.id = id + "-value";
   value.innerHTML = "";
   value.className = "align-left";
-  value.style.color = config.accumulatedValueColor;
-  value.style.whiteSpace = "nowrap";
-  accRow.appendChild(value);
+  value.style.color = config.tableValueColor;
+  value.setAttribute(
+    "style",
+    "white-space: nowrap; padding-left: 5px; padding-right: 5px; color: " +
+      config.tableValueColor +
+      ";"
+  );
+  tRow.appendChild(value);
 
   // Unit
   const unit = document.createElement("td");
   unit.id = id + "-unit";
   unit.innerHTML = "";
   unit.className = "align-left small-dimmed";
-  unit.style.color = config.accumulatedLabelColor;
+  unit.style.color = config.tableLabelColor;
   unit.style.whiteSpace = "nowrap";
   unit.style.width = "99%";
-  accRow.appendChild(unit);
+  tRow.appendChild(unit);
 }

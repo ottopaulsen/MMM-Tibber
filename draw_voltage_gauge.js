@@ -1,4 +1,4 @@
-function drawVoltageGauge(moduleId, config, gaugeOptions, is3phase) {
+function drawVoltageGauge(moduleId, config, gaugeOptions, is3phase, translate) {
   const innerRadius3 = 60;
   const radius = 100;
   const innerRadius2 = innerRadius3 + (radius - innerRadius3) / 3;
@@ -21,7 +21,7 @@ function drawVoltageGauge(moduleId, config, gaugeOptions, is3phase) {
           config.voltageGaugeMaxValue
         ],
         title: {
-          text: config.voltageGaugeTitle
+          text: config.voltageGaugeTitle || translate("VOLTAGE") + " (V)"
         },
         labels: {
           distance: 18,

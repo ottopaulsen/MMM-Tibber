@@ -23,12 +23,6 @@ Module.register("MMM-Tibber", {
     ];
   },
 
-  log: function(...args) {
-    if (this.config.logging) {
-      console.log(args);
-    }
-  },
-
   defaults: {
     // General
     tibberToken: "log in to tibber to find your token",
@@ -102,7 +96,7 @@ Module.register("MMM-Tibber", {
     powerGaugeMinTickColor: "#00AA00",
     powerGaugeAvgTickColor: "#0000AA",
     powerGaugeMaxTickColor: "#AA0000",
-    powerGaugeTitle: "Power (W)",
+    powerGaugeTitle: "",
     powerGaugeColors: [
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
@@ -112,7 +106,7 @@ Module.register("MMM-Tibber", {
     // Voltage gauge
     showVoltageGauge: true,
     voltageGaugeName: "voltage",
-    voltageGaugeTitle: "Voltage (V)",
+    voltageGaugeTitle: "",
     voltageGaugeNominalValue: 220,
     voltageGaugeMaxValue: 250,
     voltageGaugeMinValue: 150,
@@ -127,7 +121,7 @@ Module.register("MMM-Tibber", {
     // Current gauge
     showCurrentGauge: true,
     currentGaugeName: "current",
-    currentGaugeTitle: "Current (A)",
+    currentGaugeTitle: "",
     currentGaugeNominalValue: 65, // Main fuse
     currentGaugeMaxValue: 70,
     currentGaugeMinValue: 0,
@@ -147,12 +141,36 @@ Module.register("MMM-Tibber", {
     gaugesValueDistanceAdjustment: 0,
     gaugesLabelFontSize: 12,
     gaugesTitleFontSize: 12,
-    // Accumulated data
-    showAccumulated: true,
+    // Table data
+    showTable: true,
+    tableVertical: false,
+    tableWidth: null,
     accumulatedPowerUnit: "kWh",
     accumulatedCostCurrency: "Kr",
-    accumulatedLabelColor: "#666666",
-    accumulatedValueColor: "#e6e600"
+    tableLabelColor: "#666666",
+    tableValueColor: "#e6e600"
+  },
+
+  log: function(...args) {
+    if (this.config.logging) {
+      console.log(args);
+    }
+  },
+
+  getTranslations: function() {
+    return {
+      en: "translations/en.json",
+      nb: "translations/nb.json",
+      se: "translations/se.json"
+    };
+  },
+
+  showGauges: function() {
+    return (
+      this.config.showPowerGauge ||
+      this.config.showVoltageGauge ||
+      this.config.showCurrentGauge
+    );
   },
 
   start: function() {
@@ -165,6 +183,18 @@ Module.register("MMM-Tibber", {
         this.config.currentGaugeNominalValue;
       this.config.powerGaugeMaxValue = Math.floor((max + 1200) / 1000) * 1000;
       Log.info("Setting max power to " + this.config.powerGaugeMaxValue);
+      Log.info("Translating CURRENT to " + this.translate("CURRENT"));
+    }
+
+    // Set table with = gauges width if vertical
+    if (
+      this.config.tableVertical &&
+      this.config.showTable &&
+      this.config.tableWidth == null &&
+      this.config.gaugesVertical &&
+      this.showGauges()
+    ) {
+      this.config.tableWidth = this.config.gaugesWidth;
     }
 
     this.loaded = true;
@@ -205,7 +235,10 @@ Module.register("MMM-Tibber", {
             this.identifier,
             this.powerTickPositioner,
             this.config,
-            gaugeOptions(this.config)
+            gaugeOptions(this.config),
+            word => {
+              return this.translate(word);
+            }
           )
         : null;
       this.voltageDrawing = this.config.showVoltageGauge
@@ -213,7 +246,10 @@ Module.register("MMM-Tibber", {
             this.identifier,
             this.config,
             gaugeOptions(this.config),
-            this.is3phase()
+            this.is3phase(),
+            word => {
+              return this.translate(word);
+            }
           )
         : null;
       this.currentDrawing = this.config.showCurrentGauge
@@ -221,12 +257,17 @@ Module.register("MMM-Tibber", {
             this.identifier,
             this.config,
             gaugeOptions(this.config),
-            this.is3phase()
+            this.is3phase(),
+            word => {
+              return this.translate(word);
+            }
           )
         : null;
     }, 500);
 
-    return dom(this.identifier, this.config);
+    return dom(this.identifier, this.config, word => {
+      return this.translate(word);
+    });
   },
 
   showHour: function(hour, now) {
@@ -240,7 +281,7 @@ Module.register("MMM-Tibber", {
     this.powerDrawing && this.updatePowerGauge(subData);
     this.voltageDrawing && this.updateVoltageGauge(subData);
     this.currentDrawing && this.updateCurrentGauge(subData);
-    this.config.showAccumulated && this.updateAccumulated(subData);
+    this.config.showTable && this.updateTable(subData);
   },
 
   updatePowerGauge: function(subData) {
@@ -289,7 +330,7 @@ Module.register("MMM-Tibber", {
   },
 
   v1: null,
-  v2: 198,
+  v2: null,
   v3: null,
 
   is3phase: function() {
@@ -298,14 +339,16 @@ Module.register("MMM-Tibber", {
 
   updateVoltageGauge: function(subData) {
     if (!this.v1 && subData.voltagePhase1) {
-      this.v3 = 220;
       // First time voltage received. Draw again to get right number of phases.
       this.voltageDrawing = this.config.showVoltageGauge
         ? drawVoltageGauge(
             this.identifier,
             this.config,
             gaugeOptions(this.config),
-            this.is3phase()
+            this.is3phase(),
+            word => {
+              return this.translate(word);
+            }
           )
         : null;
     }
@@ -334,20 +377,21 @@ Module.register("MMM-Tibber", {
   },
 
   c1: null,
-  c2: 45,
+  c2: null,
   c3: null,
 
   updateCurrentGauge: function(subData) {
     if (!this.c1 && subData.currentL1) {
-      this.c3 = 14;
-      this.v3 = 245;
       // First time curent received. Draw again to get right number of phases.
       this.currentDrawing = this.config.showCurrentGauge
         ? drawCurrentGauge(
             this.identifier,
             this.config,
             gaugeOptions(this.config),
-            this.is3phase()
+            this.is3phase(),
+            word => {
+              return this.translate(word);
+            }
           )
         : null;
     }
@@ -375,26 +419,28 @@ Module.register("MMM-Tibber", {
       });
   },
 
-  updateAccumulated: function(subData) {
-    const accPower = document.getElementById(
+  updateTable: function(subData) {
+    // Accumulated power
+    const accumulatedPower = document.getElementById(
       "acc-power-" + this.identifier + "-value"
     );
-    accPower.innerHTML = Math.round(subData.accumulatedConsumption);
+    accumulatedPower.innerHTML = Math.round(subData.accumulatedConsumption);
 
-    const accPowerUnit = document.getElementById(
+    const accumulatedPowerUnit = document.getElementById(
       "acc-power-" + this.identifier + "-unit"
     );
-    accPowerUnit.innerHTML = this.config.accumulatedPowerUnit;
+    accumulatedPowerUnit.innerHTML = this.config.accumulatedPowerUnit;
 
-    const accCost = document.getElementById(
+    // Accumulated cost
+    const accumulatedCost = document.getElementById(
       "acc-cost-" + this.identifier + "-value"
     );
-    accCost.innerHTML = Math.round(subData.accumulatedCost);
+    accumulatedCost.innerHTML = Math.round(subData.accumulatedCost);
 
-    const accCostUnit = document.getElementById(
+    const accumulatedCostUnit = document.getElementById(
       "acc-cost-" + this.identifier + "-unit"
     );
-    accCostUnit.innerHTML =
+    accumulatedCostUnit.innerHTML =
       this.config.accumulatedCostCurrency || subData.currency;
   },
 
