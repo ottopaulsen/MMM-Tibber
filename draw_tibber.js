@@ -77,7 +77,7 @@ function drawTibber(moduleId, tibberData, config) {
       });
   };
 
-  const makeFixedPriceData = function(name, priceData, price) {
+  const makeAdditionalPriceData = function(name, priceData, price) {
     return priceData.map(d => {
       return {
         x: d.x,
@@ -168,7 +168,7 @@ function drawTibber(moduleId, tibberData, config) {
         marker: {
           enabled: false
         },
-        data: makeFixedPriceData(a.label, priceData, a.price)
+        data: makeAdditionalPriceData(a.label, priceData, a.price)
       });
     });
     return res;
@@ -325,6 +325,9 @@ function drawTibber(moduleId, tibberData, config) {
     }
   });
 
+  console.log("Min price = " + minPrice + " (" + config.showMinPrice + ")");
+  console.log("Max price = " + maxPrice + " (" + config.showMaxPrice + ")");
+
   Highcharts.chart("tibberdata-" + moduleId, {
     chart: {
       backgroundColor: "#000000",
@@ -364,7 +367,13 @@ function drawTibber(moduleId, tibberData, config) {
             // Min price line
             color: config.minPriceColor,
             width: config.showMinPrice ? config.minPriceLineWidth : 0,
-            value: minPrice,
+            value:
+              minPrice -
+              (config.showAdditionalCostsGraph
+                ? 0
+                : config.includeAdditionalCostsInPrice
+                ? sumAdditionalCosts(config)
+                : 0),
             zIndex: 9,
             label: {
               text: config.showMinPrice
@@ -390,7 +399,13 @@ function drawTibber(moduleId, tibberData, config) {
             // Max price line
             color: config.maxPriceColor,
             width: config.showMaxPrice ? config.maxPriceLineWidth : 0,
-            value: maxPrice,
+            value:
+              maxPrice -
+              (config.showAdditionalCostsGraph
+                ? 0
+                : config.includeAdditionalCostsInPrice
+                ? sumAdditionalCosts(config)
+                : 0),
             zIndex: 9,
             label: {
               text: config.showMaxPrice

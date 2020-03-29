@@ -27,17 +27,16 @@ Module.register("MMM-Tibber", {
     // General
     tibberToken: "log in to tibber to find your token",
     houseNumber: 0, // If you have more than one Tibber subscription
-    logging: false,
-    adjustSize: -30, // + or - %
-    historyHours: 24,
-    futureHours: 48,
+    logging: false, // Turn on to see more details, but keep normally off
     // Chart
+    historyHours: 24, // How long history for price and consumption to see in the graph
+    futureHours: 48, // How long into the future to see price data
     xAxisLineColor: "#333333",
     xAxisLabelColor: "#999999",
-    adjustLeftMargin: 0,
+    adjustLeftMargin: 0, // Pixels to adjust margin
     adjustRightMargin: 0,
     adjustTopMargin: 0,
-    graphWidth: null,
+    graphWidth: null, // Uses available width by default
     graphHeight: 200,
     // Price curve
     showPrice: true,
@@ -78,16 +77,8 @@ Module.register("MMM-Tibber", {
     showMinConsumption: true,
     showMaxConsumption: true,
     adjustConsumptionLabelsX: 0, // Adjust position sideways in pixels (pos or neg)
-    additionalCostPerKWH: [
-      {
-        label: "Nettleie",
-        price: 0.23125
-      },
-      {
-        label: "Forbruksavgift",
-        price: 0.20163
-      }
-    ],
+    // Additional costs
+    additionalCostPerKWH: [],
     showAdditionalCostsGraph: true,
     additionalCostsLabelColor: "#888888",
     additionalCostsLabelAdjustX: 0, // Adjust label position
@@ -111,16 +102,16 @@ Module.register("MMM-Tibber", {
     showVoltageGauge: true,
     voltageGaugeName: "voltage",
     voltageGaugeTitle: "",
-    voltageGaugeNominalValue: 220,
-    voltageGaugeMaxValue: 250,
+    voltageGaugeNominalValue: 230,
+    voltageGaugeMaxValue: 255,
     voltageGaugeMinValue: 150,
     voltageGaugeColors: [
       // Colors for the graph
       { fromValue: 0, color: "#BB0000" },
-      { fromValue: 200, color: "#0000BB" },
-      { fromValue: 215, color: "#00BB00" },
-      { fromValue: 230, color: "#0000BB" },
-      { fromValue: 235, color: "#BB0000" }
+      { fromValue: 207, color: "#0000BB" },
+      { fromValue: 220, color: "#00BB00" },
+      { fromValue: 240, color: "#0000BB" },
+      { fromValue: 253, color: "#BB0000" }
     ],
     // Current gauge
     showCurrentGauge: true,
@@ -132,12 +123,13 @@ Module.register("MMM-Tibber", {
     currentGaugeColors: [
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
-      { fromValue: 50, color: "#0000BB" },
-      { fromValue: 63, color: "#BB0000" }
+      { fromValue: 30, color: "#0000BB" },
+      { fromValue: 50, color: "#e68a00" },
+      { fromValue: 61, color: "#BB0000" }
     ],
     // Gauges common
-    gaugesVertical: false,
-    gaugesAbove: true,
+    gaugesVertical: false, // Set true to show gauges vertically
+    gaugesAbove: true, // Set false to have gauges below the graph
     gaugesWidth: 230,
     gaugesHeight: 120,
     gaugesValueFontSize: 17,
@@ -337,8 +329,8 @@ Module.register("MMM-Tibber", {
   },
 
   v1: null,
-  v2: 220,
-  v3: 228,
+  v2: null,
+  v3: null,
 
   is3phase: function() {
     return !!this.v3;
@@ -384,8 +376,8 @@ Module.register("MMM-Tibber", {
   },
 
   c1: null,
-  c2: 22,
-  c3: 43,
+  c2: null,
+  c3: null,
 
   updateCurrentGauge: function(subData) {
     if (!this.c1 && subData.currentL1) {

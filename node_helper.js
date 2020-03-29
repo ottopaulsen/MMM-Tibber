@@ -9,9 +9,9 @@ module.exports = NodeHelper.create({
     this.loaded = false;
   },
 
-  log: function(...args) {
+  log: function(arg1, arg2 = "") {
     if (this.config.logging) {
-      console.log(this.name + ": " + args);
+      console.log(this.name + ": " + arg1 + arg2);
     }
   },
 
@@ -58,7 +58,8 @@ module.exports = NodeHelper.create({
     tibber
       .getTibber(config.tibberToken, config.houseNumber, config.historyHours)
       .then(res => {
-        this.log("Tibber data: ", res);
+        this.log("Tibber data: ");
+        this.log(JSON.stringify(res, null, 2));
         tibberData.prices.current = res.currentSubscription.priceInfo.current;
         tibberData.prices.twoDays = res.currentSubscription.priceInfo.today.concat(
           res.currentSubscription.priceInfo.tomorrow
@@ -81,6 +82,10 @@ module.exports = NodeHelper.create({
       this.sendSocketNotification(
         "TIBBER_SUBSCRIPTION_DATA",
         subData.payload.data.liveMeasurement
+      );
+      this.log(
+        "Tibber subscription data:",
+        JSON.stringify(subData.payload.data.liveMeasurement, null, 2)
       );
     }
   },
