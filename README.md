@@ -205,6 +205,8 @@ You can hide those parts of the module that you dont want to see, for example:
 | showCurrentGauge         | The gauge showing current right now                                                                                                    |
 | showTable                | The table with total cost and total consumption today                                                                                  |
 
+You can hide each part by setting the config variable to `false`.
+
 ### Include additional costs
 
 Normally the electricity cost received from Tibber is only a fraction of the total electricity cost. You can add additional costs to show real costs. Example:
@@ -265,6 +267,14 @@ Set `gaugesVertical` to true if you want to show tha gauges vertically. In this 
 ## Translations
 
 There are a few words that need translations, and I have provided translations for English (default), Norwegian and Swedish. You must set the `language` config variable for MagicMirror (not the module) to either `no` or `se` to get the right language.
+
+## Bug reports
+
+If you find a bug or have an improvement suggestions, please create a Github issue.
+
+## Contributions
+
+Contributions are welcome. Please create a github issue first, so we can dicuss the change before you make it. Create a pull request when you have a change to submit.
 
 <hr/>
 
