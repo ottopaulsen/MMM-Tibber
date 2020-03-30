@@ -54,127 +54,130 @@ The above is the minimum configuration required. Here is the complete module con
 
 ```javascript
 config: {
-    // General
-    tibberToken: "log in to tibber to find your token",
-    houseNumber: 0, // If you have more than one Tibber subscription
-    logging: false, // Turn on to see more details, but keep normally off
-    // Chart
-    historyHours: 24, // How long history for price and consumption to see in the graph
-    futureHours: 48, // How long into the future to see price data
-    xAxisLineColor: "#333333",
-    xAxisLabelColor: "#999999",
-    adjustLeftMargin: 0, // Pixels to adjust margin
-    adjustRightMargin: 0,
-    adjustTopMargin: 0,
-    graphWidth: null, // Uses available width by default
-    graphHeight: 200,
-    // Price curve
-    showPrice: true,
-    priceChartType: "column", // column, line or spline
-    priceLineWidth: 3, // For line and spline, not column
-    priceColor: "#cc0000", // For line and spline
-    priceColumnColors: {
-      // Only for column chart type
-      NORMAL: ["#000055", "#0000dd", "#000088"], // Blue
-      VERY_CHEAP: ["#004400", "#00dd00", "#008800"], // Lighter green
-      CHEAP: ["#003300", "#00bb00", "#006600"], // Green
-      EXPENSIVE: ["#440000", "#cc0000", "#770000"], // Red
-      VERY_EXPENSIVE: ["#440000", "#aa0000", "#550000"], // Darker red
-      UNKNOWN: ["#444444", "#444444", "#444444"] // Gray
-    },
-    // Consumption curve
-    showConsumption: true,
-    consumptionChartType: "line", // column, line or spline
-    consumptionLineWidth: 2, // For line and spline
-    consumptionColor: "#ffcc00", // For line and spline
-    consumptionDecimals: 1,
-    // Price label and min/max price text
-    priceUnit: "kr",
-    decimalSeparator: ",",
-    graphLabelFontSize: 16,
-    priceDecimals: 2,
-    showCurrentPrice: true,
-    curPriceColor: "#ff7733",
-    // Min and Max price lines
-    showMinPrice: true,
-    showMaxPrice: true,
-    minPriceLineWidth: 1,
-    maxPriceLineWidth: 1,
-    minPriceColor: "#00bb00",
-    maxPriceColor: "#ee0000",
-    adjustPriceLabelsX: 0, // Adjust position sideways in pixels (pos or neg)
-    // Min/Max consumption labels
-    showMinConsumption: true,
-    showMaxConsumption: true,
-    adjustConsumptionLabelsX: 0, // Adjust position sideways in pixels (pos or neg)
-    // Additional costs
-    additionalCostPerKWH: [],
-    showAdditionalCostsGraph: true,
-    additionalCostsLabelColor: "#888888",
-    additionalCostsLabelAdjustX: 0, // Adjust label position
-    additionalCostsLabelAdjustY: 0, // Adjust label position
-    includeAdditionalCostsInPrice: true,
-    // Power gauge
-    showPowerGauge: true,
-    powerGaugeMaxValue: null, // Max gauge value. Calculated by default.
-    powerGaugeMarkSize: 20, // Size of marks in % of sector area
-    powerGaugeMinTickColor: "#00AA00",
-    powerGaugeAvgTickColor: "#0000AA",
-    powerGaugeMaxTickColor: "#AA0000",
-    powerGaugeTitle: "",
-    powerGaugeColors: [
-      // Colors for the graph
-      { fromValue: 0, color: "#00BB00" },
-      { fromValue: 3000, color: "#0000BB" },
-      { fromValue: 7000, color: "#BB0000" }
-    ],
-    // Voltage gauge
-    showVoltageGauge: true,
-    voltageGaugeName: "voltage",
-    voltageGaugeTitle: "",
-    voltageGaugeNominalValue: 230,
-    voltageGaugeMaxValue: 255,
-    voltageGaugeMinValue: 150,
-    voltageGaugeColors: [
-      // Colors for the graph
-      { fromValue: 0, color: "#BB0000" },
-      { fromValue: 207, color: "#0000BB" },
-      { fromValue: 220, color: "#00BB00" },
-      { fromValue: 240, color: "#0000BB" },
-      { fromValue: 253, color: "#BB0000" }
-    ],
-    // Current gauge
-    showCurrentGauge: true,
-    currentGaugeName: "current",
-    currentGaugeTitle: "",
-    currentGaugeNominalValue: 63, // Main fuse
-    currentGaugeMaxValue: 70,
-    currentGaugeMinValue: 0,
-    currentGaugeColors: [
-      // Colors for the graph
-      { fromValue: 0, color: "#00BB00" },
-      { fromValue: 30, color: "#0000BB" },
-      { fromValue: 50, color: "#e68a00" },
-      { fromValue: 61, color: "#BB0000" }
-    ],
-    // Gauges common
-    gaugesVertical: false, // Set true to show gauges vertically
-    gaugesAbove: true, // Set false to have gauges below the graph
-    gaugesWidth: 230,
-    gaugesHeight: 120,
-    gaugesValueFontSize: 17,
-    gaugesValueFontSize3phase: 14,
-    gaugesValueDistanceAdjustment: 0,
-    gaugesLabelFontSize: 12,
-    gaugesTitleFontSize: 12,
-    // Table data
-    showTable: true,
-    tableVertical: false,
-    tableWidth: null,
-    accumulatedPowerUnit: "kWh",
-    accumulatedCostCurrency: "Kr",
-    tableLabelColor: "#666666",
-    tableValueColor: "#e6e600"
+  // General
+  tibberToken: "log in to tibber to find your token",
+  houseNumber: 0, // If you have more than one Tibber subscription
+  logging: false, // Turn on to see more details, but keep normally off
+  // Chart
+  historyHours: 24, // How long history for price and consumption to see in the graph
+  futureHours: 48, // How long into the future to see price data
+  xAxisLineColor: "#333333",
+  xAxisLabelColor: "#999999",
+  adjustLeftMargin: 0, // Pixels to adjust margin
+  adjustRightMargin: 0,
+  adjustTopMargin: 0,
+  graphWidth: null, // Uses available width by default
+  graphHeight: 200,
+  // Price curve
+  showPrice: true,
+  priceChartType: "column", // column, line or spline
+  priceLineWidth: 3, // For line and spline, not column
+  priceColor: "#cc0000", // For line and spline
+  priceColumnColors: {
+    // Only for column chart type
+    NORMAL: ["#000055", "#0000dd", "#000088"], // Blue
+    VERY_CHEAP: ["#004400", "#00dd00", "#008800"], // Lighter green
+    CHEAP: ["#003300", "#00bb00", "#006600"], // Green
+    EXPENSIVE: ["#440000", "#cc0000", "#770000"], // Red
+    VERY_EXPENSIVE: ["#440000", "#aa0000", "#550000"], // Darker red
+    UNKNOWN: ["#444444", "#444444", "#444444"] // Gray
+  },
+  // Consumption curve
+  showConsumption: true,
+  consumptionChartType: "spline", // column, line or spline
+  consumptionLineWidth: 2, // For line and spline
+  consumptionColor: "#ffcc00", // For line and spline
+  consumptionDecimals: 1,
+  // Price label and min/max price text
+  priceUnit: "kr",
+  decimalSeparator: ",",
+  graphLabelFontSize: 16,
+  priceDecimals: 2,
+  showCurrentPrice: true,
+  curPriceColor: "#ff7733",
+  // Min and Max price lines
+  showMinPrice: true,
+  showMaxPrice: true,
+  minPriceLineWidth: 1,
+  maxPriceLineWidth: 1,
+  minPriceColor: "#00bb00",
+  maxPriceColor: "#ee0000",
+  adjustPriceLabelsX: 0, // Adjust position sideways in pixels (pos or neg)
+  // Min/Max consumption labels
+  showMinConsumption: true,
+  showMaxConsumption: true,
+  adjustConsumptionLabelsX: 0, // Adjust position sideways in pixels (pos or neg)
+  // Additional costs
+  additionalCostPerKWH: [],
+  showAdditionalCostsGraph: true,
+  additionalCostsLabelColor: "#888888",
+  additionalCostsLabelAdjustX: 0, // Adjust label position
+  additionalCostsLabelAdjustY: 0, // Adjust label position
+  includeAdditionalCostsInPrice: true,
+  // Power gauge
+  showPowerGauge: true,
+  powerGaugeMaxValue: null, // Max gauge value. Calculated by default.
+  powerGaugeMarkSize: 20, // Size of marks in % of sector area
+  powerGaugeMinTickColor: "#00AA00",
+  powerGaugeAvgTickColor: "#0000AA",
+  powerGaugeMaxTickColor: "#AA0000",
+  powerGaugeTitle: "",
+  powerGaugeDynamicColors: true,
+  orangePercentOfAvg: 120,
+  redPowerPercentOfMax: 85,
+  redPowerPercentOfAvg: 200,
+  powerGaugeColors: [
+    // Colors for the graph
+    { fromValue: 0, color: "#00BB00" },
+    { fromValue: 5000, color: "#e68a00" },
+    { fromValue: 7000, color: "#BB0000" }
+  ],
+  // Voltage gauge
+  showVoltageGauge: true,
+  voltageGaugeName: "voltage",
+  voltageGaugeTitle: "",
+  voltageGaugeNominalValue: 230,
+  voltageGaugeMaxValue: 255,
+  voltageGaugeMinValue: 150,
+  voltageGaugeColors: [
+    // Colors for the graph
+    { fromValue: 0, color: "#BB0000" },
+    { fromValue: 207, color: "#0000BB" },
+    { fromValue: 220, color: "#00BB00" },
+    { fromValue: 240, color: "#0000BB" },
+    { fromValue: 253, color: "#BB0000" }
+  ],
+  // Current gauge
+  showCurrentGauge: true,
+  currentGaugeName: "current",
+  currentGaugeTitle: "",
+  currentGaugeNominalValue: 63, // Main fuse
+  currentGaugeMaxValue: 70,
+  currentGaugeMinValue: 0,
+  currentGaugeColors: [
+    // Colors for the graph
+    { fromValue: 0, color: "#00BB00" },
+    { fromValue: 50, color: "#e68a00" },
+    { fromValue: 61, color: "#BB0000" }
+  ],
+  // Gauges common
+  gaugesVertical: false, // Set true to show gauges vertically
+  gaugesAbove: true, // Set false to have gauges below the graph
+  gaugesWidth: 230,
+  gaugesHeight: 120,
+  gaugesValueFontSize: 17,
+  gaugesValueFontSize3phase: 14,
+  gaugesValueDistanceAdjustment: 0,
+  gaugesLabelFontSize: 12,
+  gaugesTitleFontSize: 12,
+  // Table data
+  showTable: true,
+  tableVertical: false,
+  tableWidth: null,
+  accumulatedPowerUnit: "kWh",
+  accumulatedCostCurrency: "Kr",
+  tableLabelColor: "#666666",
+  tableValueColor: "#e6e600"
 }
 ```
 
@@ -238,7 +241,15 @@ If you want to include the additional costs in the price lables, but you dont li
 
 The power gauge shows current power consumption, and is updated every other second. It has some tiny marks showing minimum and maximum consumptions today, as well as average consumption. You can change the size of those marks using the `powerGaugeMarkSize` variable, that can be set between 0 and 100. If you set it to 0, they will not be visible. If you set them to 100, the current power meter will not be visible, only the label.
 
-You can configure colors for the gauge for different value zones using the `powerGaugeColors` config variable. You can add or remove lines here, but must keep at least one.
+You can configure colors for the gauge for different value zones using the `powerGaugeColors` config variable. By default, the color zones are dynamic as follows:
+
+- Power less than average: The first color is used (default green).
+- Power over "orangePowerPercentOfAvg" percent of average (default 120%), less than "red power" (see below): The second color is used (default orange).
+- Power over "red power": The third color is used (default red).
+
+By "red power" means power larger then redPowerPercentOfMax percent (default 85%) of maximum power or larger than redPowerPercentOfAvg percent (default 200%) of average power. The percentages can be changed by config. Dynamic power colors can be turned off by setting powerGaugeDynamicColors to false.
+
+For dynamic colors to work, there must be at least 3 colors in powerGaugeColors (ony 3 are used). Else there must be at least one color.
 
 The maximum value of the gauge is set automatically based on the nominal value of the voltage and the current by multiplying those, and rounding up. This is correct only for 1-phase, so you can override the maximum value using the powerGaugeMaxValue config variable.
 

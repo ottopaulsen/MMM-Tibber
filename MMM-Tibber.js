@@ -92,10 +92,14 @@ Module.register("MMM-Tibber", {
     powerGaugeAvgTickColor: "#0000AA",
     powerGaugeMaxTickColor: "#AA0000",
     powerGaugeTitle: "",
+    powerGaugeDynamicColors: true,
+    orangePercentOfAvg: 120,
+    redPowerPercentOfMax: 85,
+    redPowerPercentOfAvg: 200,
     powerGaugeColors: [
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
-      { fromValue: 3000, color: "#0000BB" },
+      { fromValue: 5000, color: "#e68a00" },
       { fromValue: 7000, color: "#BB0000" }
     ],
     // Voltage gauge
@@ -123,7 +127,6 @@ Module.register("MMM-Tibber", {
     currentGaugeColors: [
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
-      { fromValue: 30, color: "#0000BB" },
       { fromValue: 50, color: "#e68a00" },
       { fromValue: 61, color: "#BB0000" }
     ],
@@ -180,6 +183,16 @@ Module.register("MMM-Tibber", {
       this.config.powerGaugeMaxValue = Math.floor((max + 1200) / 1000) * 1000;
       Log.info("Setting max power to " + this.config.powerGaugeMaxValue);
       Log.info("Translating CURRENT to " + this.translate("CURRENT"));
+    }
+
+    if (
+      this.config.powerGaugeColors.length < 3 &&
+      this.config.powerGaugeDynamicColors
+    ) {
+      Log.error(
+        "powerGaugeDynamicColors must have 3 colors to use powerGaugeDynamicColors"
+      );
+      this.config.powerGaugeDynamicColors = false;
     }
 
     // Set table with = gauges width if vertical
@@ -295,9 +308,23 @@ Module.register("MMM-Tibber", {
     const stepSize = 120;
     min1.update(subData.minPower - stepSize);
     min2.update(subData.minPower + stepSize);
+    const redPower = Math.min(
+      (subData.maxPower * this.config.redPowerPercentOfMax) / 100,
+      (subData.averagePower * this.config.redPowerPercentOfAvg) / 100
+    );
+    const dynamicColorIndex =
+      subData.power <
+      (subData.averagePower * this.config.orangePercentOfAvg) / 100
+        ? 0
+        : subData.power < redPower
+        ? 1
+        : 2;
+    const color = this.config.powerGaugeDynamicColors
+      ? this.config.powerGaugeColors[dynamicColorIndex].color
+      : this.getColor(this.config.powerGaugeColors, subData.power);
     current.update({
       y: subData.power,
-      color: this.getColor(this.config.powerGaugeColors, subData.power)
+      color: color
     });
     avg1.update(subData.averagePower - stepSize);
     avg2.update(subData.averagePower + stepSize);
