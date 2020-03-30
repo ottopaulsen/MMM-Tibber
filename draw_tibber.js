@@ -325,9 +325,6 @@ function drawTibber(moduleId, tibberData, config) {
     }
   });
 
-  console.log("Min price = " + minPrice + " (" + config.showMinPrice + ")");
-  console.log("Max price = " + maxPrice + " (" + config.showMaxPrice + ")");
-
   Highcharts.chart("tibberdata-" + moduleId, {
     chart: {
       backgroundColor: "#000000",

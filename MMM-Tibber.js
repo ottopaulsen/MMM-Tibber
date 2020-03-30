@@ -152,7 +152,7 @@ Module.register("MMM-Tibber", {
 
   log: function(...args) {
     if (this.config.logging) {
-      console.log(args);
+      args.forEach(arg => console.log(arg));
     }
   },
 
@@ -296,6 +296,8 @@ Module.register("MMM-Tibber", {
     this.config.showTable && this.updateTable(subData);
   },
 
+  maxPowerWarningLogged: false,
+
   updatePowerGauge: function(subData) {
     const gauge = this.powerDrawing;
     const min1 = gauge.series[0].points[0];
@@ -331,7 +333,11 @@ Module.register("MMM-Tibber", {
     max1.update(subData.maxPower - stepSize);
     max2.update(subData.maxPower + stepSize);
 
-    if (subData.maxPower > this.config.powerGaugeMaxValue) {
+    if (
+      subData.maxPower > this.config.powerGaugeMaxValue &&
+      !this.maxPowerWarningLogged
+    ) {
+      this.maxPowerWarningLogged = true;
       Log.error(
         "Actual max power (" +
           subData.maxPower +
