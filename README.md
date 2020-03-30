@@ -240,7 +240,7 @@ If you want to include the additional costs in the price lables, but you dont li
 
 ![Power gauge](doc/MMM-Tibber-screenshot-power-gauge.png)
 
-The power gauge shows current power consumption, and is updated every other second. It has some tiny marks showing minimum and maximum consumptions today, as well as average consumption. You can change the size of those marks using the `powerGaugeMarkSize` variable, that can be set between 0 and 100. If you set it to 0, they will not be visible. If you set them to 100, the current power meter will not be visible, only the label.
+The power gauge shows current power consumption, and is updated every other second or more. It has some tiny marks showing minimum and maximum consumptions today, as well as average consumption. You can change the size of those marks using the `powerGaugeMarkSize` variable, that can be set between 0 and 100. If you set it to 0, they will not be visible. If you set them to 100, the current power meter will not be visible, only the label.
 
 You can configure colors for the gauge for different value zones using the `powerGaugeColors` config variable. By default, the color zones are dynamic as follows:
 
@@ -258,7 +258,7 @@ The maximum value of the gauge is set automatically based on the nominal value o
 
 ![Voltage gauge](doc/MMM-Tibber-screenshot-voltage-gauge.png)
 
-The voltage gauge shows the current voltage, and is updated every 10 seconds. It automatically detects if you have 3 phases, and if so, shows voltage per phase. If you have anything other than 230V, you should change the `voltageGaugeNominalValue` config variable accordingly, and then you would probably also adjust the `voltageGaugeColors` values. These are by default set to show red if the value is outside the 10% that is the official requirement in Norway, and blue if they are >10V away from 230. You can also change the minimum and maximum values for tha gauge.
+The voltage gauge shows the current voltage, and is updated every 10 seconds (this actually varies). It automatically detects if you have 3 phases, and if so, shows voltage per phase. If you have anything other than 230V, you should change the `voltageGaugeNominalValue` config variable accordingly, and then you would probably also adjust the `voltageGaugeColors` values. These are by default set to show red if the value is outside the 10% that is the official requirement in Norway, and blue if they are >10V away from 230. You can also change the minimum and maximum values for tha gauge.
 
 #### Current gauge
 
@@ -279,6 +279,14 @@ Set `gaugesVertical` to true if you want to show tha gauges vertically. In this 
 ## Translations
 
 There are a few words that need translations, and I have provided translations for English (default), Norwegian and Swedish. You must set the `language` config variable for MagicMirror (not the module) to either `no` or `se` to get the right language.
+
+## Troubleshooting
+
+If something is not working, turn on logging by setting the config variable `logging` to `true`, and look at the data you receive from Tibber.
+
+If you for example cannot see the voltage gauge, it may be because you get no voltage data from Tibber. NB! Voltage and current data does not necessarily come on all updates, so watch at least 10 seconds.
+
+If you cannot se 3-phase gauges for voltage and current, and you know you get data for 3 phases, try to set the `is3phase` config variable to true to override the automagic.
 
 ## Bug reports
 
