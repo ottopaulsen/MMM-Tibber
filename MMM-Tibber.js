@@ -54,7 +54,7 @@ Module.register("MMM-Tibber", {
     },
     // Consumption curve
     showConsumption: true,
-    consumptionChartType: "line", // column, line or spline
+    consumptionChartType: "spline", // column, line or spline
     consumptionLineWidth: 2, // For line and spline
     consumptionColor: "#ffcc00", // For line and spline
     consumptionDecimals: 1,
