@@ -333,7 +333,7 @@ Module.register("MMM-Tibber", {
   v3: null,
 
   is3phase: function() {
-    return !!this.v3;
+    return !!this.v3 || !!this.c3;
   },
 
   updateVoltageGauge: function(subData) {
