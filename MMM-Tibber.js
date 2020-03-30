@@ -28,6 +28,7 @@ Module.register("MMM-Tibber", {
     tibberToken: "log in to tibber to find your token",
     houseNumber: 0, // If you have more than one Tibber subscription
     logging: false, // Turn on to see more details, but keep normally off
+    is3phase: false, // Set to true to force 3-phase
     // Chart
     historyHours: 24, // How long history for price and consumption to see in the graph
     futureHours: 48, // How long into the future to see price data
@@ -366,7 +367,7 @@ Module.register("MMM-Tibber", {
   v3: null,
 
   is3phase: function() {
-    return !!this.v3 || !!this.c3;
+    return this.config.is3phase || !!this.v3 || !!this.c3;
   },
 
   updateVoltageGauge: function(subData) {
