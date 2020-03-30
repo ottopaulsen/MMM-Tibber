@@ -58,6 +58,7 @@ config: {
   tibberToken: "log in to tibber to find your token",
   houseNumber: 0, // If you have more than one Tibber subscription
   logging: false, // Turn on to see more details, but keep normally off
+  is3phase: false, // Set to true to force 3-phase
   // Chart
   historyHours: 24, // How long history for price and consumption to see in the graph
   futureHours: 48, // How long into the future to see price data
