@@ -1,6 +1,6 @@
 "use strict";
 
-Date.prototype.addHours = function(h) {
+Date.prototype.addHours = function (h) {
   this.setHours(this.getHours() + h);
   return this;
 };
@@ -8,18 +8,19 @@ Date.prototype.addHours = function(h) {
 let powerTickPositions = [];
 
 Module.register("MMM-Tibber", {
-  getScripts: function() {
+  getScripts: function () {
     return [
       "gauge_options.js",
       "dom.js",
-      "draw_tibber.js",
+      "draw-graphs.js",
+      "tibber-data.js",
       "draw_power_gauge.js",
       "draw_voltage_gauge.js",
       "draw_current_gauge.js",
       this.file("node_modules/highcharts/highcharts.js"),
       this.file("node_modules/highcharts/highcharts-more.js"),
       this.file("node_modules/highcharts/modules/annotations.js"),
-      this.file("node_modules/highcharts/modules/solid-gauge.js")
+      this.file("node_modules/highcharts/modules/solid-gauge.js"),
     ];
   },
 
@@ -51,7 +52,7 @@ Module.register("MMM-Tibber", {
       CHEAP: ["#003300", "#00bb00", "#006600"], // Green
       EXPENSIVE: ["#440000", "#cc0000", "#770000"], // Red
       VERY_EXPENSIVE: ["#440000", "#aa0000", "#550000"], // Darker red
-      UNKNOWN: ["#444444", "#444444", "#444444"] // Gray
+      UNKNOWN: ["#444444", "#444444", "#444444"], // Gray
     },
     // Consumption curve
     showConsumption: true,
@@ -101,7 +102,7 @@ Module.register("MMM-Tibber", {
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
       { fromValue: 5000, color: "#e68a00" },
-      { fromValue: 7000, color: "#BB0000" }
+      { fromValue: 7000, color: "#BB0000" },
     ],
     // Voltage gauge
     showVoltageGauge: true,
@@ -116,7 +117,7 @@ Module.register("MMM-Tibber", {
       { fromValue: 207, color: "#0000BB" },
       { fromValue: 220, color: "#00BB00" },
       { fromValue: 240, color: "#0000BB" },
-      { fromValue: 253, color: "#BB0000" }
+      { fromValue: 253, color: "#BB0000" },
     ],
     // Current gauge
     showCurrentGauge: true,
@@ -129,7 +130,7 @@ Module.register("MMM-Tibber", {
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
       { fromValue: 50, color: "#e68a00" },
-      { fromValue: 61, color: "#BB0000" }
+      { fromValue: 61, color: "#BB0000" },
     ],
     // Gauges common
     gaugesVertical: false, // Set true to show gauges vertically
@@ -148,24 +149,27 @@ Module.register("MMM-Tibber", {
     accumulatedPowerUnit: "kWh",
     accumulatedCostCurrency: "Kr",
     tableLabelColor: "#666666",
-    tableValueColor: "#e6e600"
+    tableValueColor: "#e6e600",
+    // Consumption parts
+    showConsumptionParts: true,
+    consumptionParts: [],
   },
 
-  log: function(...args) {
+  log: function (...args) {
     if (this.config.logging) {
-      args.forEach(arg => console.log(arg));
+      args.forEach((arg) => console.log(arg));
     }
   },
 
-  getTranslations: function() {
+  getTranslations: function () {
     return {
       en: "translations/en.json",
       nb: "translations/nb.json",
-      se: "translations/se.json"
+      se: "translations/se.json",
     };
   },
 
-  showGauges: function() {
+  showGauges: function () {
     return (
       this.config.showPowerGauge ||
       this.config.showVoltageGauge ||
@@ -173,7 +177,7 @@ Module.register("MMM-Tibber", {
     );
   },
 
-  start: function() {
+  start: function () {
     Log.info(this.name + " started.");
 
     // Set max power
@@ -214,33 +218,44 @@ Module.register("MMM-Tibber", {
 
   interval: null,
 
-  socketNotificationReceived: function(notification, payload) {
+  socketNotificationReceived: function (notification, payload) {
     if (payload == null) {
       Log.warn(self.name + ": " + notification + " - No payload");
       return;
     }
     if (notification === "TIBBER_SUBSCRIPTION_DATA") {
-      this.log("Got sub data: ");
-      this.log(payload);
+      // this.log("Got sub data: ");
+      // this.log(payload);
       this.updateSubData(payload);
     } else if (notification === "TIBBER_DATA") {
       this.log("Got Tibber data: ");
       this.log(payload);
+      const additionalCosts = this.sumAdditionalCosts(this.config);
       if (this.config.showConsumption || this.config.showPrice) {
         clearInterval(this.interval);
-        drawTibber(this.identifier, payload, this.config);
+        drawGraphs(
+          this.identifier,
+          new TibberData(payload),
+          this.config,
+          additionalCosts
+        );
         this.interval = setInterval(() => {
-          drawTibber(this.identifier, payload, this.config);
+          drawGraphs(
+            this.identifier,
+            new TibberData(payload),
+            this.config,
+            additionalCosts
+          );
         }, 30000);
       }
     }
   },
 
-  getStyles: function() {
+  getStyles: function () {
     return ["MMM-Tibber.css"];
   },
 
-  getDom: function() {
+  getDom: function () {
     setTimeout(() => {
       this.powerTickPositions = [0, 0, 0, 0, this.config.powerGaugeMaxValue];
       this.powerDrawing = this.config.showPowerGauge
@@ -249,7 +264,7 @@ Module.register("MMM-Tibber", {
             this.powerTickPositioner,
             this.config,
             gaugeOptions(this.config),
-            word => {
+            (word) => {
               return this.translate(word);
             }
           )
@@ -260,7 +275,7 @@ Module.register("MMM-Tibber", {
             this.config,
             gaugeOptions(this.config),
             this.is3phase(),
-            word => {
+            (word) => {
               return this.translate(word);
             }
           )
@@ -271,26 +286,26 @@ Module.register("MMM-Tibber", {
             this.config,
             gaugeOptions(this.config),
             this.is3phase(),
-            word => {
+            (word) => {
               return this.translate(word);
             }
           )
         : null;
     }, 500);
 
-    return dom(this.identifier, this.config, word => {
+    return dom(this.identifier, this.config, (word) => {
       return this.translate(word);
     });
   },
 
-  showHour: function(hour, now) {
+  showHour: function (hour, now) {
     return (
       hour >= now - this.config.historyHours &&
       hour <= now + this.config.futureHours
     );
   },
 
-  updateSubData: function(subData) {
+  updateSubData: function (subData) {
     this.powerDrawing && this.updatePowerGauge(subData);
     this.voltageDrawing && this.updateVoltageGauge(subData);
     this.currentDrawing && this.updateCurrentGauge(subData);
@@ -299,7 +314,7 @@ Module.register("MMM-Tibber", {
 
   maxPowerWarningLogged: false,
 
-  updatePowerGauge: function(subData) {
+  updatePowerGauge: function (subData) {
     const gauge = this.powerDrawing;
     const min1 = gauge.series[0].points[0];
     const min2 = gauge.series[1].points[0];
@@ -327,7 +342,7 @@ Module.register("MMM-Tibber", {
       : this.getColor(this.config.powerGaugeColors, subData.power);
     current.update({
       y: subData.power,
-      color: color
+      color: color,
     });
     avg1.update(subData.averagePower - stepSize);
     avg2.update(subData.averagePower + stepSize);
@@ -358,7 +373,7 @@ Module.register("MMM-Tibber", {
     gauge.yAxis[0].update();
   },
 
-  powerTickPositioner: function() {
+  powerTickPositioner: function () {
     return powerTickPositions;
   },
 
@@ -366,11 +381,11 @@ Module.register("MMM-Tibber", {
   v2: null,
   v3: null,
 
-  is3phase: function() {
+  is3phase: function () {
     return this.config.is3phase || !!this.v3 || !!this.c3;
   },
 
-  updateVoltageGauge: function(subData) {
+  updateVoltageGauge: function (subData) {
     if (!this.v1 && subData.voltagePhase1) {
       // First time voltage received. Draw again to get right number of phases.
       this.voltageDrawing = this.config.showVoltageGauge
@@ -379,7 +394,7 @@ Module.register("MMM-Tibber", {
             this.config,
             gaugeOptions(this.config),
             this.is3phase(),
-            word => {
+            (word) => {
               return this.translate(word);
             }
           )
@@ -395,17 +410,17 @@ Module.register("MMM-Tibber", {
     this.v1 &&
       phase1.update({
         y: Math.round(this.v1),
-        color: this.getColor(this.config.voltageGaugeColors, this.v1)
+        color: this.getColor(this.config.voltageGaugeColors, this.v1),
       });
     this.v2 &&
       phase2.update({
         y: Math.round(this.v2),
-        color: this.getColor(this.config.voltageGaugeColors, this.v2)
+        color: this.getColor(this.config.voltageGaugeColors, this.v2),
       });
     this.v3 &&
       phase3.update({
         y: Math.round(this.v3),
-        color: this.getColor(this.config.voltageGaugeColors, this.v3)
+        color: this.getColor(this.config.voltageGaugeColors, this.v3),
       });
   },
 
@@ -413,7 +428,7 @@ Module.register("MMM-Tibber", {
   c2: null,
   c3: null,
 
-  updateCurrentGauge: function(subData) {
+  updateCurrentGauge: function (subData) {
     if (!this.c1 && subData.currentL1) {
       // First time curent received. Draw again to get right number of phases.
       this.currentDrawing = this.config.showCurrentGauge
@@ -422,7 +437,7 @@ Module.register("MMM-Tibber", {
             this.config,
             gaugeOptions(this.config),
             this.is3phase(),
-            word => {
+            (word) => {
               return this.translate(word);
             }
           )
@@ -438,21 +453,21 @@ Module.register("MMM-Tibber", {
     this.c1 &&
       phase1.update({
         y: Math.round(this.c1),
-        color: this.getColor(this.config.currentGaugeColors, this.c1)
+        color: this.getColor(this.config.currentGaugeColors, this.c1),
       });
     this.c2 &&
       phase2.update({
         y: Math.round(this.c2),
-        color: this.getColor(this.config.currentGaugeColors, this.c2)
+        color: this.getColor(this.config.currentGaugeColors, this.c2),
       });
     this.c3 &&
       phase3.update({
         y: Math.round(this.c3),
-        color: this.getColor(this.config.currentGaugeColors, this.c3)
+        color: this.getColor(this.config.currentGaugeColors, this.c3),
       });
   },
 
-  updateTable: function(subData) {
+  updateTable: function (subData) {
     // Accumulated power
     const accumulatedPower = document.getElementById(
       "acc-power-" + this.identifier + "-value"
@@ -471,7 +486,8 @@ Module.register("MMM-Tibber", {
     accumulatedCost.innerHTML = Math.round(
       subData.accumulatedCost +
         (this.config.includeAdditionalCostsInPrice
-          ? sumAdditionalCosts(this.config) * subData.accumulatedConsumption
+          ? this.sumAdditionalCosts(this.config) *
+            subData.accumulatedConsumption
           : 0)
     );
 
@@ -487,5 +503,11 @@ Module.register("MMM-Tibber", {
     return colors.reduce((color, cur) => {
       return value > cur.fromValue ? cur.color : color;
     }, colors[0].color);
-  }
+  },
+
+  sumAdditionalCosts(config) {
+    return config.additionalCostPerKWH.reduce((sum, a) => {
+      return sum + a.price;
+    }, 0);
+  },
 });
