@@ -20,7 +20,7 @@ Module.register("MMM-Tibber", {
       this.file("node_modules/highcharts/highcharts.js"),
       this.file("node_modules/highcharts/highcharts-more.js"),
       this.file("node_modules/highcharts/modules/annotations.js"),
-      this.file("node_modules/highcharts/modules/solid-gauge.js"),
+      this.file("node_modules/highcharts/modules/solid-gauge.js")
     ];
   },
 
@@ -52,7 +52,7 @@ Module.register("MMM-Tibber", {
       CHEAP: ["#003300", "#00bb00", "#006600"], // Green
       EXPENSIVE: ["#440000", "#cc0000", "#770000"], // Red
       VERY_EXPENSIVE: ["#440000", "#aa0000", "#550000"], // Darker red
-      UNKNOWN: ["#444444", "#444444", "#444444"], // Gray
+      UNKNOWN: ["#444444", "#444444", "#444444"] // Gray
     },
     // Consumption curve
     showConsumption: true,
@@ -102,7 +102,7 @@ Module.register("MMM-Tibber", {
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
       { fromValue: 5000, color: "#e68a00" },
-      { fromValue: 7000, color: "#BB0000" },
+      { fromValue: 7000, color: "#BB0000" }
     ],
     // Voltage gauge
     showVoltageGauge: true,
@@ -117,7 +117,7 @@ Module.register("MMM-Tibber", {
       { fromValue: 207, color: "#0000BB" },
       { fromValue: 220, color: "#00BB00" },
       { fromValue: 240, color: "#0000BB" },
-      { fromValue: 253, color: "#BB0000" },
+      { fromValue: 253, color: "#BB0000" }
     ],
     // Current gauge
     showCurrentGauge: true,
@@ -130,7 +130,7 @@ Module.register("MMM-Tibber", {
       // Colors for the graph
       { fromValue: 0, color: "#00BB00" },
       { fromValue: 50, color: "#e68a00" },
-      { fromValue: 61, color: "#BB0000" },
+      { fromValue: 61, color: "#BB0000" }
     ],
     // Gauges common
     gaugesVertical: false, // Set true to show gauges vertically
@@ -152,7 +152,7 @@ Module.register("MMM-Tibber", {
     tableValueColor: "#e6e600",
     // Consumption parts
     showConsumptionParts: true,
-    consumptionParts: [],
+    consumptionParts: []
   },
 
   log: function (...args) {
@@ -165,7 +165,7 @@ Module.register("MMM-Tibber", {
     return {
       en: "translations/en.json",
       nb: "translations/nb.json",
-      se: "translations/se.json",
+      se: "translations/se.json"
     };
   },
 
@@ -248,6 +248,13 @@ Module.register("MMM-Tibber", {
           );
         }, 30000);
       }
+    }
+  },
+
+  notificationReceived: function (notification, payload, sender) {
+    if (notification === "MQTT_MESSAGE_RECEIVED") {
+      console.log("MMM-Tibber received MQTT_MESSAGE_RECEIVED notification");
+      console.log({ payload, sender });
     }
   },
 
@@ -342,7 +349,7 @@ Module.register("MMM-Tibber", {
       : this.getColor(this.config.powerGaugeColors, subData.power);
     current.update({
       y: subData.power,
-      color: color,
+      color: color
     });
     avg1.update(subData.averagePower - stepSize);
     avg2.update(subData.averagePower + stepSize);
@@ -410,17 +417,17 @@ Module.register("MMM-Tibber", {
     this.v1 &&
       phase1.update({
         y: Math.round(this.v1),
-        color: this.getColor(this.config.voltageGaugeColors, this.v1),
+        color: this.getColor(this.config.voltageGaugeColors, this.v1)
       });
     this.v2 &&
       phase2.update({
         y: Math.round(this.v2),
-        color: this.getColor(this.config.voltageGaugeColors, this.v2),
+        color: this.getColor(this.config.voltageGaugeColors, this.v2)
       });
     this.v3 &&
       phase3.update({
         y: Math.round(this.v3),
-        color: this.getColor(this.config.voltageGaugeColors, this.v3),
+        color: this.getColor(this.config.voltageGaugeColors, this.v3)
       });
   },
 
@@ -453,17 +460,17 @@ Module.register("MMM-Tibber", {
     this.c1 &&
       phase1.update({
         y: Math.round(this.c1),
-        color: this.getColor(this.config.currentGaugeColors, this.c1),
+        color: this.getColor(this.config.currentGaugeColors, this.c1)
       });
     this.c2 &&
       phase2.update({
         y: Math.round(this.c2),
-        color: this.getColor(this.config.currentGaugeColors, this.c2),
+        color: this.getColor(this.config.currentGaugeColors, this.c2)
       });
     this.c3 &&
       phase3.update({
         y: Math.round(this.c3),
-        color: this.getColor(this.config.currentGaugeColors, this.c3),
+        color: this.getColor(this.config.currentGaugeColors, this.c3)
       });
   },
 
@@ -483,13 +490,11 @@ Module.register("MMM-Tibber", {
     const accumulatedCost = document.getElementById(
       "acc-cost-" + this.identifier + "-value"
     );
-    accumulatedCost.innerHTML = Math.round(
-      subData.accumulatedCost +
-        (this.config.includeAdditionalCostsInPrice
-          ? this.sumAdditionalCosts(this.config) *
-            subData.accumulatedConsumption
-          : 0)
-    );
+    accumulatedCost.innerHTML =
+      subData.accumulatedCost.toFixed(this.config.priceDecimals) +
+      (this.config.includeAdditionalCostsInPrice
+        ? this.sumAdditionalCosts(this.config) * subData.accumulatedConsumption
+        : 0);
 
     const accumulatedCostUnit = document.getElementById(
       "acc-cost-" + this.identifier + "-unit"
@@ -509,5 +514,5 @@ Module.register("MMM-Tibber", {
     return config.additionalCostPerKWH.reduce((sum, a) => {
       return sum + a.price;
     }, 0);
-  },
+  }
 });
