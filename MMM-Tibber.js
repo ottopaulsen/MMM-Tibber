@@ -490,11 +490,13 @@ Module.register("MMM-Tibber", {
     const accumulatedCost = document.getElementById(
       "acc-cost-" + this.identifier + "-value"
     );
-    accumulatedCost.innerHTML =
-      subData.accumulatedCost.toFixed(this.config.priceDecimals) +
-      (this.config.includeAdditionalCostsInPrice
-        ? this.sumAdditionalCosts(this.config) * subData.accumulatedConsumption
-        : 0);
+    accumulatedCost.innerHTML = Math.round(
+      subData.accumulatedCost +
+        (this.config.includeAdditionalCostsInPrice
+          ? this.sumAdditionalCosts(this.config) *
+            subData.accumulatedConsumption
+          : 0)
+    );
 
     const accumulatedCostUnit = document.getElementById(
       "acc-cost-" + this.identifier + "-unit"
