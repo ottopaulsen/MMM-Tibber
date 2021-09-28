@@ -10,12 +10,13 @@
   "license": "MIT",
   "dependencies": {
     "esm": "^3.2.25",
-    "graphql": "^14.6.0",
-    "graphql-subscriptions": "^1.1.0",
-    "graphql-subscriptions-client": "^0.12.0",
+    "graphql": "^14.7.0",
+    "graphql-subscriptions": "^1.2.1",
+    "graphql-subscriptions-client": "^0.16.2",
     "graphql-yoga": "^1.18.3",
-    "highcharts": "^7.2.1",
+    "highcharts": "^9.2.2",
+    "jsonpointer": "^4.1.0",
     "request": "^2.88.2",
-    "request-promise": "^4.2.5"
+    "request-promise": "^4.2.6"
   }
 }
