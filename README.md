@@ -258,9 +258,9 @@ Then use the [MMM-MQTT](https://github.com/ottopaulsen/MMM-MQTT) module to recei
 ```json
 subscriptions: [
   {
-    topic: "powersaver/plan",
-    hidden: true,
-    broadcast: true
+    "topic": "powersaver/plan",
+    "hidden": true,
+    "broadcast": true
   },
 ]
 ```
