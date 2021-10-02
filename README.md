@@ -14,11 +14,16 @@ Standard screen:
 
 ![Screenshot](doc/MMM-Tibber-screenshot-main.png)
 
-The price curve was a bit boring the day I took this screenshot, and also, after 13:00 it normally shows the prices for the next day too.
+
 
 Gauges 3-phase:
 
 ![Screenshot](doc/MMM-Tibber-screenshot-3phase.png)
+
+Graph with savings marked (the purple lines):
+
+![Screenshot](doc/MMM-Tibber-screenshot-savings-graph.png)
+
 
 Vertical Gauges:
 
@@ -83,6 +88,12 @@ config: {
     VERY_EXPENSIVE: ["#440000", "#aa0000", "#550000"], // Darker red
     UNKNOWN: ["#444444", "#444444", "#444444"] // Gray
   },
+  // Savings curve
+  showSavings: false,
+  savingsChartType: "columnrange",
+  savingsLineWidth: 3,
+  savingsColor: "#b829e3",
+  savingsTopic: "powersaver/plan",
   // Consumption curve
   showConsumption: true,
   consumptionChartType: "spline", // column, line or spline
@@ -233,6 +244,36 @@ This will give you a graph like in the main screenshot above.
 If you want to include the additional costs in the price lables, but you dont like to see the additional costs in the graphs, you can hide them by setting the `showAdditionalCostsGraph` config variable to false. This will give you a graph like this:
 
 ![Graph without additional costs](doc/MMM-Tibber-screenshot-no-additional.png)
+
+### Show savings
+
+![Screenshot](doc/MMM-Tibber-screenshot-savings-graph.png)
+
+Savings as illustrated witht he purple ticks can be shown by combining the following:
+
+Use the [`PowerSaver`](https://github.com/ottopaulsen/node-red-contrib-power-saver) Node-RED node to control a power switch to turn off when the power is expensive. Send the output from output 3 on this node to an MQTT message queue with the topic `powersaver/plan` (using the `Send to MQTT` node.)
+
+Then use the [MMM-MQTT](https://github.com/ottopaulsen/MMM-MQTT) module to receive this topic, and broadcast it, on the same MM as you are running MMM-Tibber. Use the following config for MMM-MQTT:
+
+```json
+subscriptions: [
+  {
+    topic: "powersaver/plan",
+    hidden: true,
+    broadcast: true
+  },
+]
+```
+
+At last turn on the savings graph by setting `showSavings: true,` in the MMM-Tibber config.
+
+You can configure another topic using the `savingsTopic` config option.
+
+You may also use another source, sending savings data in the same format as the PowerSaver node is producing it. (Please create an issue if you want this explained.)
+
+If you take a notice at the purple ticks in the graph above, you see that it is not the most expensive hours that are turned off. This would be useless, assuming the power is used immediately after the switch is turned on again, as it would for a water heater, for example. The hours turned off are those that has the larges difference to the first hour that is turned on. The PowerSaver node may be expanded with other strategies.
+
+NB! This setup is in beta! Please report bugs using Github issues.
 
 ### The gauges
 

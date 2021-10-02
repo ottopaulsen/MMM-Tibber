@@ -1,6 +1,6 @@
 "use strict";
 
-function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
+function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
   const includeAdditional = config.includeAdditionalCostsInPrice;
   const showFromTime = new Date().addHours(-config.historyHours - 1);
   const showToTime = new Date().addHours(config.futureHours);
@@ -33,6 +33,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
   // Series
   const series = [];
   config.showPrice && series.push(seriesPrice(config, priceData));
+  config.showSavings && series.push(seriesSavings(config, savingsData));
   config.showAdditionalCostsGraph &&
     series.push(...seriesAdditionalCosts(config, priceData));
   config.showConsumption &&
@@ -55,8 +56,8 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
   // Show time in local timezone
   Highcharts.setOptions({
     time: {
-      useUTC: false,
-    },
+      useUTC: false
+    }
   });
 
   Highcharts.chart("tibberdata-" + moduleId, {
@@ -64,30 +65,30 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
       backgroundColor: "#000000",
       marginTop: 10 + config.adjustTopMargin,
       marginLeft: 80 + config.adjustLeftMargin,
-      marginRight: 60 + config.adjustRightMargin,
+      marginRight: 60 + config.adjustRightMargin
     },
     title: {
-      text: "",
+      text: ""
     },
     xAxis: {
       type: "datetime",
       labels: {
         style: {
-          color: config.xAxisLabelColor,
-        },
+          color: config.xAxisLabelColor
+        }
       },
-      lineColor: config.xAxisLineColor,
+      lineColor: config.xAxisLineColor
     },
     yAxis: [
       {
         // Primary yAxis (price, left)
         startOnTick: false,
         title: {
-          text: "",
+          text: ""
         },
         gridLineColor: "#000000",
         labels: {
-          enabled: false,
+          enabled: false
         },
         min: 0,
         // max: Math.ceil(maxPrice * 10) / 10 + 1,
@@ -118,11 +119,11 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
               verticalAlign: "top",
               style: {
                 color: config.minPriceColor,
-                fontSize: config.graphLabelFontSize,
+                fontSize: config.graphLabelFontSize
               },
               x: 57 + config.adjustPriceLabelsX,
-              y: 13,
-            },
+              y: 13
+            }
           },
           {
             // Max price line
@@ -150,60 +151,60 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
               verticalAlign: "top",
               style: {
                 color: config.maxPriceColor,
-                fontSize: config.graphLabelFontSize,
+                fontSize: config.graphLabelFontSize
               },
               x: 57 + config.adjustPriceLabelsX,
-              y: -3,
-            },
-          },
-        ],
+              y: -3
+            }
+          }
+        ]
       },
       {
         // Secondary yAxis (consumption, right)
         title: {
           text: "Consumption",
           style: {
-            color: "#000000",
-          },
+            color: "#000000"
+          }
         },
         labels: {
-          enabled: false,
+          enabled: false
         },
         gridLineColor: "#000000",
         min: 0,
         // max: Math.ceil(maxConsumption),
-        opposite: true,
-      },
+        opposite: true
+      }
     ],
     legend: {
-      enabled: false,
+      enabled: false
     },
     plotOptions: {
       column: {
         pointPadding: 0.0,
         groupPadding: 0.0,
         borderWidth: 0,
-        stacking: "normal",
+        stacking: "normal"
       },
       line: {
-        stacking: "normal",
+        stacking: "normal"
       },
       area: {
-        stacking: "normal",
+        stacking: "normal"
       },
       series: {
-        animation: false,
-      },
+        animation: false
+      }
     },
     series: series,
     annotations: [
       {
-        labels: annotationsLabels,
-      },
+        labels: annotationsLabels
+      }
     ],
     credits: {
-      enabled: false,
-    },
+      enabled: false
+    }
   });
 
   function makeAdditionalPriceData(name, priceData, price) {
@@ -212,7 +213,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
         x: d.x,
         y: price,
         color: d.color,
-        id: d.id ? d.id + name : "",
+        id: d.id ? d.id + name : ""
       };
     });
   }
@@ -230,18 +231,37 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
   }
 
   function seriesPrice(config, priceData) {
+    console.log("priceData: ", priceData);
     return {
       name: "Powerprice",
       type: config.priceChartType,
       stack: 1,
       step: "center",
-      color: config.priceColor,
+      color: config.savingsColor,
       zIndex: config.priceChartType === "column" ? 5 : 7,
       lineWidth: config.priceLineWidth,
       marker: {
-        enabled: false,
+        enabled: false
       },
-      data: priceData,
+      data: priceData
+    };
+  }
+
+  function seriesSavings(config, savingsData) {
+    console.log("savingsData: ", savingsData);
+    return {
+      name: "Savings",
+      type: config.savingsChartType,
+      stack: 1,
+      step: "center",
+      color: config.savingsColor,
+      borderWidth: 0,
+      zIndex: 9,
+      pointWidth: config.savingsLineWidth,
+      marker: {
+        enabled: false
+      },
+      data: savingsData
     };
   }
 
@@ -260,9 +280,9 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
         zIndex: config.priceChartType === "column" ? 5 : 7,
         lineWidth: config.priceLineWidth,
         marker: {
-          enabled: false,
+          enabled: false
         },
-        data: makeAdditionalPriceData(a.label, priceData, a.price),
+        data: makeAdditionalPriceData(a.label, priceData, a.price)
       });
     });
     return res;
@@ -283,10 +303,10 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
         step: "center",
         lineWidth: config.consumptionLineWidth,
         marker: {
-          enabled: false,
+          enabled: false
         },
         yAxis: 1,
-        data: c.data,
+        data: c.data
       });
     });
     return res;
@@ -305,9 +325,9 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
       y: -10,
       style: {
         color: config.curPriceColor,
-        fontSize: config.graphLabelFontSize,
+        fontSize: config.graphLabelFontSize
       },
-      zIndex: 15,
+      zIndex: 15
     };
   }
 
@@ -318,7 +338,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
         ? {
             x: -80 + config.adjustConsumptionLabelsX,
             y: minConsumption,
-            yAxis: 1,
+            yAxis: 1
           }
         : "dontshow",
       text:
@@ -338,8 +358,8 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
       overflow: "none",
       style: {
         color: config.consumptionColor,
-        fontSize: config.graphLabelFontSize,
-      },
+        fontSize: config.graphLabelFontSize
+      }
     };
   }
 
@@ -350,7 +370,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
         ? {
             x: -80 + config.adjustConsumptionLabelsX,
             y: maxConsumption,
-            yAxis: 1,
+            yAxis: 1
           }
         : "dontshow",
       text:
@@ -370,8 +390,8 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
       overflow: "none",
       style: {
         color: config.consumptionColor,
-        fontSize: config.graphLabelFontSize,
-      },
+        fontSize: config.graphLabelFontSize
+      }
     };
   }
 
@@ -396,8 +416,8 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
         overflow: "none",
         style: {
           color: config.additionalCostsLabelColor,
-          fontSize: config.graphLabelFontSize,
-        },
+          fontSize: config.graphLabelFontSize
+        }
       };
     });
   }
@@ -410,7 +430,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
         return {
           point: {
             x: -80 + config.adjustConsumptionLabelsX,
-            y: config.graphHeight - 70 - count++ * 10,
+            y: config.graphHeight - 70 - count++ * 10
             // TODO: Calculate y correct
           },
           text: c.label,
@@ -424,8 +444,8 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts) {
           overflow: "none",
           style: {
             color: c.color,
-            fontSize: config.graphLabelFontSize,
-          },
+            fontSize: config.graphLabelFontSize
+          }
         };
       });
   }

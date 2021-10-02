@@ -54,6 +54,12 @@ Module.register("MMM-Tibber", {
       VERY_EXPENSIVE: ["#440000", "#aa0000", "#550000"], // Darker red
       UNKNOWN: ["#444444", "#444444", "#444444"] // Gray
     },
+    // Savings curve
+    showSavings: false,
+    savingsChartType: "columnrange",
+    savingsLineWidth: 3,
+    savingsColor: "#b829e3",
+    savingsTopic: "powersaver/plan",
     // Consumption curve
     showConsumption: true,
     consumptionChartType: "spline", // column, line or spline
@@ -218,6 +224,8 @@ Module.register("MMM-Tibber", {
 
   interval: null,
 
+  savingsData: [],
+
   socketNotificationReceived: function (notification, payload) {
     if (payload == null) {
       Log.warn(self.name + ": " + notification + " - No payload");
@@ -231,20 +239,23 @@ Module.register("MMM-Tibber", {
       this.log("Got Tibber data: ");
       this.log(payload);
       const additionalCosts = this.sumAdditionalCosts(this.config);
+      // this.makeSavingsData(payload);
       if (this.config.showConsumption || this.config.showPrice) {
         clearInterval(this.interval);
         drawGraphs(
           this.identifier,
           new TibberData(payload),
           this.config,
-          additionalCosts
+          additionalCosts,
+          this.savingsData
         );
         this.interval = setInterval(() => {
           drawGraphs(
             this.identifier,
             new TibberData(payload),
             this.config,
-            additionalCosts
+            additionalCosts,
+            this.savingsData
           );
         }, 30000);
       }
@@ -255,6 +266,15 @@ Module.register("MMM-Tibber", {
     if (notification === "MQTT_MESSAGE_RECEIVED") {
       console.log("MMM-Tibber received MQTT_MESSAGE_RECEIVED notification");
       console.log({ payload, sender });
+      if (payload.topic === this.config.savingsTopic) {
+        const savings = JSON.parse(payload.value);
+        const sumAdditional = this.sumAdditionalCosts(this.config);
+        this.savingsData = savings.hours.map((h) => [
+          Date.parse(h.start),
+          h.saving ? sumAdditional + h.price - h.saving : null,
+          h.saving ? sumAdditional + h.price : null
+        ]);
+      }
     }
   },
 
