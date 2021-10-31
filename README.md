@@ -55,9 +55,12 @@ Of course, you need a [Tibber](https://tibber.com/) account to use this module. 
 
 If you have more than one Tibber subscription (for example several houses), you must use the houseNumber config variable to set correct house number. You can turn on logging (`logging: true`) and watch the output from the node_helper in the terminal window to check the address of the configured house.
 
-The above is the minimum configuration required. Here is the complete module configuration you can use, with default values:
+The above is the minimum configuration required. Below is the complete module configuration you can use, with default values.
+
+NB! Do NOT copy the whole config below. This is the config reference showing what is possible to configure, and the default values. Only pick those that you want to change, and include them in your config.
 
 ```javascript
+// Do NOT copy all this! (Read why above.)
 config: {
   // General
   tibberToken: "log in to tibber to find your token",

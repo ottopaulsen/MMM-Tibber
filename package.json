@@ -1,5 +1,5 @@
 {
-  "name": "MMM-Tibber",
+  "name": "mmm-tibber",
   "version": "2.0.0",
   "description": "Show data from Tibber",
   "author": "Otto Paulsen",
@@ -8,6 +8,14 @@
     "url": "git://github.com/ottopaulsen/MMM-Tibber.git"
   },
   "license": "MIT",
+  "keywords": [
+    "magicmirror",
+    "tibber",
+    "energy",
+    "smarthome",
+    "home-automation",
+    "power"
+  ],
   "dependencies": {
     "esm": "^3.2.25",
     "graphql": "^14.7.0",
