@@ -237,7 +237,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
       type: config.priceChartType,
       stack: 1,
       step: "center",
-      color: config.savingsColor,
+      color: config.priceColor,
       zIndex: config.priceChartType === "column" ? 5 : 7,
       lineWidth: config.priceLineWidth,
       marker: {
