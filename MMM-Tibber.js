@@ -268,7 +268,9 @@ Module.register("MMM-Tibber", {
       console.log({ payload, sender });
       if (payload.topic === this.config.savingsTopic) {
         const savings = JSON.parse(payload.value);
-        const sumAdditional = this.sumAdditionalCosts(this.config);
+        const sumAdditional = this.config.showAdditionalCostsGraph
+          ? this.sumAdditionalCosts(this.config)
+          : 0;
         this.savingsData = savings.hours.map((h) => [
           Date.parse(h.start),
           h.saving ? sumAdditional + h.price - h.saving : null,
