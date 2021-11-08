@@ -23,7 +23,7 @@
     "graphql-subscriptions-client": "^0.16.2",
     "graphql-yoga": "^1.18.3",
     "highcharts": "^9.2.2",
-    "jsonpointer": "^4.1.0",
+    "jsonpointer": "^5.0.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"
   }
