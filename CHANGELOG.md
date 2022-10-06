@@ -1,5 +1,9 @@
 Changes worth noticing, per version, starting from version 2.1.0
 
+### 2.1.2
+
+- Bugfix swedish translations
+
 ### 2.1.1
 
 - Update dependencies

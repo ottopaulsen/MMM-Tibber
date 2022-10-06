@@ -172,7 +172,7 @@ Module.register("MMM-Tibber", {
     return {
       en: "translations/en.json",
       nb: "translations/nb.json",
-      se: "translations/se.json"
+      sv: "translations/sv.json"
     };
   },
 
