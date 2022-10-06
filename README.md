@@ -14,8 +14,6 @@ Standard screen:
 
 ![Screenshot](doc/MMM-Tibber-screenshot-main.png)
 
-
-
 Gauges 3-phase:
 
 ![Screenshot](doc/MMM-Tibber-screenshot-3phase.png)
@@ -23,7 +21,6 @@ Gauges 3-phase:
 Graph with savings marked (the purple lines):
 
 ![Screenshot](doc/MMM-Tibber-screenshot-savings-graph.png)
-
 
 Vertical Gauges:
 
@@ -67,6 +64,7 @@ config: {
   houseNumber: 0, // If you have more than one Tibber subscription
   logging: false, // Turn on to see more details, but keep normally off
   is3phase: false, // Set to true to force 3-phase
+  updateInterval: 5, // Tibber query update interval in minutes
   // Chart
   historyHours: 24, // How long history for price and consumption to see in the graph
   futureHours: 48, // How long into the future to see price data
@@ -229,7 +227,7 @@ You can hide each part by setting the config variable to `false`.
 
 Normally the electricity cost received from Tibber is only a fraction of the total electricity cost. You can add additional costs to show real costs. Example:
 
-```
+```javascript
     additionalCostPerKWH: [
       {
         label: "Nettleie",
@@ -258,14 +256,14 @@ Use the [`PowerSaver`](https://github.com/ottopaulsen/node-red-contrib-power-sav
 
 Then use the [MMM-MQTT](https://github.com/ottopaulsen/MMM-MQTT) module to receive this topic, and broadcast it, on the same MM as you are running MMM-Tibber. Use the following config for MMM-MQTT:
 
-```json
+```javascript
 subscriptions: [
   {
-    "topic": "powersaver/plan",
-    "hidden": true,
-    "broadcast": true
-  },
-]
+    topic: "powersaver/plan",
+    hidden: true,
+    broadcast: true
+  }
+];
 ```
 
 At last turn on the savings graph by setting `showSavings: true,` in the MMM-Tibber config.

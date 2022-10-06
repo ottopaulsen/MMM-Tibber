@@ -35,13 +35,19 @@ module.exports = NodeHelper.create({
         var config = payload;
         this.config = config;
         this.loaded = true;
+        console.log(
+          this.name +
+            ": Tibber update interval: " +
+            config.updateInterval +
+            " minutes"
+        );
         const sub = this.receiveTibberSubscriptionData.bind(this);
         tibber.subscribe(config.tibberToken, config.houseNumber, sub);
 
         this.handleTibber(config);
         setInterval(() => {
           this.handleTibber(config);
-        }, 1000 * 60 * 1); // Every 5 minutes
+        }, 1000 * 60 * config.updateInterval);
       }
     }
   },
@@ -80,8 +86,8 @@ module.exports = NodeHelper.create({
       consumption: [],
       prices: {
         current: null,
-        twoDays: [],
-      },
+        twoDays: []
+      }
     };
     tibberData.prices.current = tibber.currentSubscription.priceInfo.current;
     tibberData.prices.twoDays = tibber.currentSubscription.priceInfo.today.concat(
@@ -117,9 +123,9 @@ module.exports = NodeHelper.create({
         return {
           from: new Date(v.from),
           consumption: v.consumption,
-          consumptionUnit: v.consumptionUnit,
+          consumptionUnit: v.consumptionUnit
         };
-      }),
+      })
     };
     // console.log("convertedTotal = ", JSON.stringify(convertedTotal, null, 2));
 
@@ -133,9 +139,9 @@ module.exports = NodeHelper.create({
             return {
               from: new Date(d.from),
               consumption: d.consumption,
-              consumptionUnit: d.consumptionUnit,
+              consumptionUnit: d.consumptionUnit
             };
-          }),
+          })
         };
       });
     // console.log("convertedParts = ", JSON.stringify(convertedParts, null, 2));
@@ -163,9 +169,9 @@ module.exports = NodeHelper.create({
         return {
           from: v.from,
           consumption: v.consumption - sumParts(convertedParts, v.from),
-          consumptionUnit: v.consumptionUnit,
+          consumptionUnit: v.consumptionUnit
         };
-      }),
+      })
     };
 
     // console.log("Remaining: ", remaining);
@@ -199,5 +205,5 @@ module.exports = NodeHelper.create({
       }
     });
     return Promise.all(promises);
-  },
+  }
 });
