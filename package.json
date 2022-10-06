@@ -21,7 +21,7 @@
     "graphql": "^14.7.0",
     "graphql-subscriptions": "^1.2.1",
     "graphql-subscriptions-client": "^0.16.2",
-    "graphql-yoga": "^1.18.3",
+    "graphql-yoga": "^2.13.13",
     "highcharts": "^9.2.2",
     "jsonpointer": "^4.1.0",
     "request": "^2.88.2",
