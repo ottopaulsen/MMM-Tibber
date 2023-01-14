@@ -34,6 +34,10 @@ Go to your `MagicMirror/modules` folder and write
     cd MMM-Tibber
     npm install
 
+## Migrate from v2 to v3
+
+In version 3 you need to configure the Tibber homeId. The old config homeNumber is no longer used.
+
 ## Configuration
 
 Here is an example configuration. Put it in the `MagicMirror/config/config.js` file:
@@ -44,11 +48,14 @@ Here is an example configuration. Put it in the `MagicMirror/config/config.js` f
     position: 'bottom_center',
     config: {
         tibberToken: '<find your token from tibber.com>'
+        homeId: '<see below how to find your home id>'
     }
 },
 ```
 
 Of course, you need a [Tibber](https://tibber.com/) account to use this module. Your access token (`tibberToken`) can be found in the [developer pages](https://developer.tibber.com/settings/accesstoken).
+
+Your homeId can be found by running `node get-homes.js <tibberToken>`, or you can find it using the API explorer, following the link above. If you use the script (`get-homes.js`), pick the `id` from the correct home in the result data.
 
 If you have more than one Tibber subscription (for example several houses), you must use the houseNumber config variable to set correct house number. You can turn on logging (`logging: true`) and watch the output from the node_helper in the terminal window to check the address of the configured house.
 
@@ -61,7 +68,7 @@ NB! Do NOT copy the whole config below. This is the config reference showing wha
 config: {
   // General
   tibberToken: "log in to tibber to find your token",
-  houseNumber: 0, // If you have more than one Tibber subscription
+  homeId: '<see above how to find your home id>',
   logging: false, // Turn on to see more details, but keep normally off
   is3phase: false, // Set to true to force 3-phase
   updateInterval: 5, // Tibber query update interval in minutes

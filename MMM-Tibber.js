@@ -28,6 +28,7 @@ Module.register("MMM-Tibber", {
     // General
     tibberToken: "log in to tibber to find your token",
     houseNumber: 0, // If you have more than one Tibber subscription
+    homeId: null,
     logging: false, // Turn on to see more details, but keep normally off
     is3phase: false, // Set to true to force 3-phase
     updateInterval: 5, // Tibber query update interval in minutes

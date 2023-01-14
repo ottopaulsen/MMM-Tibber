@@ -3,6 +3,7 @@ t.js
 t?.js
 s.js
 s?.js
+wsurl.js
 node_modules/
 config.js
 .vscode/

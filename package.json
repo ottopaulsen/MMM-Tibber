@@ -1,6 +1,6 @@
 {
   "name": "mmm-tibber",
-  "version": "2.1.2",
+  "version": "3.0.0",
   "description": "Show data from Tibber",
   "author": "Otto Paulsen",
   "repository": {
@@ -17,14 +17,10 @@
     "power"
   ],
   "dependencies": {
-    "esm": "^3.2.25",
-    "graphql": "^14.7.0",
-    "graphql-subscriptions": "^1.2.1",
-    "graphql-subscriptions-client": "^0.16.2",
-    "graphql-yoga": "^2.13.13",
+    "graphql-ws": "^5.11.2",
     "highcharts": "^9.2.2",
     "jsonpointer": "^5.0.1",
-    "request": "^2.88.2",
-    "request-promise": "^4.2.6"
+    "node-fetch": "^2.6.7",
+    "ws": "^8.11.0"
   }
 }
