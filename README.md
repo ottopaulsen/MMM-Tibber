@@ -327,7 +327,7 @@ Set `gaugesVertical` to true if you want to show tha gauges vertically. In this 
 
 ## Translations
 
-There are a few words that need translations, and I have provided translations for English (default), Norwegian and Swedish. You must set the `language` config variable for MagicMirror (not the module) to either `no` or `se` to get the right language.
+There are a few words that need translations, and I have provided translations for English (default), Norwegian and Swedish. You must set the `language` config variable for MagicMirror (not the module) to either `nb` or `se` to get the right language.
 
 ## Troubleshooting
 
