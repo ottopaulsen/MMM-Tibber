@@ -57,8 +57,6 @@ Of course, you need a [Tibber](https://tibber.com/) account to use this module. 
 
 Your homeId can be found by running `node get-homes.js <tibberToken>`, or you can find it using the API explorer, following the link above. If you use the script (`get-homes.js`), pick the `id` from the correct home in the result data.
 
-If you have more than one Tibber subscription (for example several houses), you must use the houseNumber config variable to set correct house number. You can turn on logging (`logging: true`) and watch the output from the node_helper in the terminal window to check the address of the configured house.
-
 The above is the minimum configuration required. Below is the complete module configuration you can use, with default values.
 
 NB! Do NOT copy the whole config below. This is the config reference showing what is possible to configure, and the default values. Only pick those that you want to change, and include them in your config.
@@ -205,7 +203,7 @@ The `futureHours` max value is 48, but it cannot show more than the whole next d
 
 ### Multiple module instances
 
-You can configure multiple instances of the module to show different parts on different places of the screen. The Tibber token and the house number must be the same for all modules. Logging should also be the same, or if not, the logging from the node_modules.js file is random on or off.
+You can configure multiple instances of the module to show different parts on different places of the screen. The Tibber token and the homeId must be the same for all modules. Logging should also be the same, or if not, the logging from the node_modules.js file is random on or off.
 
 Use the showXXX variables to hide different parts of the module. For example, you can show the price and consumption chart in a wide area of the screen, and show the gauges for power, voltage and current vertically in a narrow part of the screen. The text table also looks best vertically.
 
@@ -327,7 +325,7 @@ Set `gaugesVertical` to true if you want to show tha gauges vertically. In this 
 
 ## Translations
 
-There are a few words that need translations, and I have provided translations for English (default), Norwegian and Swedish. You must set the `language` config variable for MagicMirror (not the module) to either `no` or `se` to get the right language.
+There are a few words that need translations, and I have provided translations for English (default), Norwegian and Swedish. You must set the `language` config variable for MagicMirror (not the module) to either `nb` or `sv` to get the right language.
 
 ## Troubleshooting
 
