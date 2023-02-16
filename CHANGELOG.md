@@ -1,5 +1,9 @@
 Changes worth noticing, per version, starting from version 2.1.0
 
+### 3.0.1
+
+- This is an attempt to restart the live data subscription when no data has been received for 10 minutes, hoping to fix the freeze problem.
+
 ### 3.0.0
 
 - Use new Tibber API for live data.

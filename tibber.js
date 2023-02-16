@@ -130,6 +130,7 @@ const tibber = async function (tibberToken) {
     subscriptionId = generateId();
     let connected = false;
     let connectionTimeout;
+    let heartbeat;
 
     console.log("Starting Tibber subscription of live consumption");
     if (!(await verifyRealtimeConsumption(homeId))) {
@@ -180,6 +181,11 @@ const tibber = async function (tibberToken) {
 
           case "next":
             clearTimeout(connectionTimeout);
+            clearTimeout(heartbeat);
+            heartbeat = setTimeout(() => {
+              console.log("No data for 10 minutes. Restarting.");
+              initWebsocket();
+            }, 10 * 60 * 1000);
             callback(data.payload.data.liveMeasurement);
             break;
 
