@@ -47,7 +47,7 @@ Here is an example configuration. Put it in the `MagicMirror/config/config.js` f
     module: 'MMM-Tibber',
     position: 'bottom_center',
     config: {
-        tibberToken: '<find your token from tibber.com>'
+        tibberToken: '<find your token from tibber.com>',
         homeId: '<see below how to find your home id>'
     }
 },
