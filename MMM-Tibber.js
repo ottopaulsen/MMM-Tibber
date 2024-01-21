@@ -44,6 +44,7 @@ Module.register("MMM-Tibber", {
     graphHeight: 200,
     // Price curve
     showPrice: true,
+    dynamicMin: null, // Set graph min to a dynamic value. 0 = minPrice, ex. 0.2 = 0.2 below min price
     priceChartType: "column", // column, line or spline
     priceLineWidth: 3, // For line and spline, not column
     priceColor: "#cc0000", // For line and spline

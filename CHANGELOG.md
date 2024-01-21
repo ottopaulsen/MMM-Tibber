@@ -1,5 +1,9 @@
 Changes worth noticing, per version, starting from version 2.1.0
 
+### 3.1.0
+
+- Add config value dynamicMin for price curve to set graph min to a dynamic value. 0 = minPrice, ex. 0.2 = 0.2 below min price.
+
 ### 3.0.1
 
 - This is an attempt to restart the live data subscription when no data has been received for 10 minutes, hoping to fix the freeze problem.

@@ -16,6 +16,8 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
   const minPrice = priceData.minPrice + (includeAdditional ? sumAdditional : 0);
   const maxPrice = priceData.maxPrice + (includeAdditional ? sumAdditional : 0);
 
+  const graphMin = config.dynamicMin === null ? 0 : minPrice - config.dynamicMin;
+
   const curPrice =
     tibber.getCurrentPrice() + (includeAdditional ? sumAdditional : 0);
 
@@ -90,7 +92,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
         labels: {
           enabled: false
         },
-        min: 0,
+        min: graphMin,
         // max: Math.ceil(maxPrice * 10) / 10 + 1,
         plotLines: [
           {
