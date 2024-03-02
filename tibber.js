@@ -75,7 +75,7 @@ const tibber = async function (tibberToken) {
       .replace("HISTHOURS", hoursHistory)
       .replace("HOMEID", homeId);
     const res = await tibberGqlQuery(query);
-    return res.data.data.viewer;
+    return res.data.data?.viewer ?? null;
   };
 
   const verifyRealtimeConsumption = async function (homeId) {

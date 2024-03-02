@@ -86,12 +86,6 @@ module.exports = NodeHelper.create({
   },
 
   sendChartData: function (consumptions, tibber) {
-    this.log("Tibber data: ");
-    this.log(JSON.stringify(tibber, null, 2));
-
-    this.log("Consumption parts: ");
-    this.log(JSON.stringify(consumptions, null, 2));
-
     const tibberData = {
       consumption: [],
       prices: {
@@ -99,20 +93,29 @@ module.exports = NodeHelper.create({
         twoDays: []
       }
     };
-    tibberData.prices.current =
-      tibber.home.currentSubscription.priceInfo.current;
-    tibberData.prices.twoDays = tibber.home.currentSubscription.priceInfo.today.concat(
-      tibber.home.currentSubscription.priceInfo.tomorrow
-    );
-    if (tibber.home.consumption) {
-      tibberData.totalConsumption = tibber.home.consumption.nodes.filter(
-        (n) => {
-          return n.consumption != null;
-        }
-      );
+    if (tibber) {
+      this.log("Tibber data: ");
+      this.log(JSON.stringify(tibber, null, 2));
+      tibberData.prices.current =
+        tibber.home.currentSubscription.priceInfo.current;
+      tibberData.prices.twoDays =
+        tibber.home.currentSubscription.priceInfo.today.concat(
+          tibber.home.currentSubscription.priceInfo.tomorrow
+        );
+      if (tibber.home.consumption) {
+        tibberData.totalConsumption = tibber.home.consumption.nodes.filter(
+          (n) => {
+            return n.consumption != null;
+          }
+        );
+      }
+    } else {
+      this.log("No Tibber data");
     }
 
     if (consumptions) {
+      this.log("Consumption parts: ");
+      this.log(JSON.stringify(consumptions, null, 2));
       if (tibber.home.consumption) {
         consumptions.unshift(
           this.makeRemainingConsumption(
@@ -123,6 +126,8 @@ module.exports = NodeHelper.create({
       }
       tibberData.consumptions = consumptions;
       // tibberData.consumptions = consumptions.filter(c => c.data.length > 0);
+    } else {
+      this.log("No consumptions data");
     }
 
     // console.log("Consumptions: ", JSON.stringify(consumptions, null, 2));
