@@ -241,18 +241,17 @@ Module.register("MMM-Tibber", {
 
     if (notification.startsWith(subscription_prefix)) {
       const instanceId = notification.substring(subscription_prefix.length);
-      if (instanceId == this.instanceId) {
+      if (instanceId === this.instanceId) {
         this.log("got subscription data for instance: " + instanceId + " current instance is: " + this.instanceId);
         this.updateSubData(payload);
       }
     } else if (notification.startsWith(data_prefix)) {
       const instanceId = notification.substring(data_prefix.length);
-      if (instanceId == this.instanceId) {
+      if (instanceId === this.instanceId) {
         this.log("got usage data for instance: " + instanceId + " current instance is: " + this.instanceId);
         this.log("Got Tibber data: ");
         this.log(payload);
         const additionalCosts = this.sumAdditionalCosts(this.config);
-        // this.makeSavingsData(payload);
         if (this.config.showConsumption || this.config.showPrice) {
           clearInterval(this.interval);
           drawGraphs(
