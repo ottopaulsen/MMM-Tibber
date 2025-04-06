@@ -5,8 +5,6 @@ Date.prototype.addHours = function (h) {
   return this;
 };
 
-let powerTickPositions = [];
-
 Module.register("MMM-Tibber", {
   getScripts: function () {
     return [
@@ -188,7 +186,9 @@ Module.register("MMM-Tibber", {
   },
 
   start: function () {
-    Log.info(this.name + " started.");
+    this.instanceId = this.config.homeId;
+    this.powerTickPositions = [0, 0, 0, 0, this.config.powerGaugeMaxValue]; // Initialize here
+    Log.info(this.name + " started. Home Id: " + this.config.homeId);
 
     // Set max power
     if (!this.config.powerGaugeMaxValue) {
@@ -223,7 +223,7 @@ Module.register("MMM-Tibber", {
 
     this.loaded = true;
     this.updateDom();
-    this.sendSocketNotification("TIBBER_CONFIG", this.config);
+    this.sendSocketNotification("TIBBER_CONFIG_" + this.instanceId, this.config);
   },
 
   interval: null,
@@ -235,25 +235,25 @@ Module.register("MMM-Tibber", {
       Log.warn(self.name + ": " + notification + " - No payload");
       return;
     }
-    if (notification === "TIBBER_SUBSCRIPTION_DATA") {
-      // this.log("Got sub data: ");
-      // this.log(payload);
-      this.updateSubData(payload);
-    } else if (notification === "TIBBER_DATA") {
-      this.log("Got Tibber data: ");
-      this.log(payload);
-      const additionalCosts = this.sumAdditionalCosts(this.config);
-      // this.makeSavingsData(payload);
-      if (this.config.showConsumption || this.config.showPrice) {
-        clearInterval(this.interval);
-        drawGraphs(
-          this.identifier,
-          new TibberData(payload),
-          this.config,
-          additionalCosts,
-          this.savingsData
-        );
-        this.interval = setInterval(() => {
+
+    const subscription_prefix = "TIBBER_SUBSCRIPTION_DATA_";
+    const data_prefix = "TIBBER_DATA_";
+
+    if (notification.startsWith(subscription_prefix)) {
+      const instanceId = notification.substring(subscription_prefix.length);
+      if (instanceId === this.instanceId) {
+        this.log("got subscription data for instance: " + instanceId + " current instance is: " + this.instanceId);
+        this.updateSubData(payload);
+      }
+    } else if (notification.startsWith(data_prefix)) {
+      const instanceId = notification.substring(data_prefix.length);
+      if (instanceId === this.instanceId) {
+        this.log("got usage data for instance: " + instanceId + " current instance is: " + this.instanceId);
+        this.log("Got Tibber data: ");
+        this.log(payload);
+        const additionalCosts = this.sumAdditionalCosts(this.config);
+        if (this.config.showConsumption || this.config.showPrice) {
+          clearInterval(this.interval);
           drawGraphs(
             this.identifier,
             new TibberData(payload),
@@ -261,25 +261,16 @@ Module.register("MMM-Tibber", {
             additionalCosts,
             this.savingsData
           );
-        }, 30000);
-      }
-    }
-  },
-
-  notificationReceived: function (notification, payload, sender) {
-    if (notification === "MQTT_MESSAGE_RECEIVED") {
-      console.log("MMM-Tibber received MQTT_MESSAGE_RECEIVED notification");
-      console.log({ payload, sender });
-      if (payload.topic === this.config.savingsTopic) {
-        const savings = JSON.parse(payload.value);
-        const sumAdditional = this.config.showAdditionalCostsGraph
-          ? this.sumAdditionalCosts(this.config)
-          : 0;
-        this.savingsData = savings.hours.map((h) => [
-          Date.parse(h.start),
-          h.saving ? sumAdditional + h.price - h.saving : null,
-          h.saving ? sumAdditional + h.price : null
-        ]);
+          this.interval = setInterval(() => {
+            drawGraphs(
+              this.identifier,
+              new TibberData(payload),
+              this.config,
+              additionalCosts,
+              this.savingsData
+            );
+          }, 30000);
+        }
       }
     }
   },
@@ -290,11 +281,10 @@ Module.register("MMM-Tibber", {
 
   getDom: function () {
     setTimeout(() => {
-      this.powerTickPositions = [0, 0, 0, 0, this.config.powerGaugeMaxValue];
       this.powerDrawing = this.config.showPowerGauge
         ? drawPowerGauge(
             this.identifier,
-            this.powerTickPositioner,
+            () => this.powerTickPositions,
             this.config,
             gaugeOptions(this.config),
             (word) => {
@@ -397,17 +387,13 @@ Module.register("MMM-Tibber", {
     }
 
     // Set dynamic tick positions
-    powerTickPositions.splice(0, powerTickPositions.length);
-    powerTickPositions.push(0);
-    powerTickPositions.push(subData.minPower);
-    powerTickPositions.push(subData.averagePower);
-    powerTickPositions.push(subData.maxPower);
-    powerTickPositions.push(this.config.powerGaugeMaxValue);
+    this.powerTickPositions.splice(0, this.powerTickPositions.length);
+    this.powerTickPositions.push(0);
+    this.powerTickPositions.push(subData.minPower);
+    this.powerTickPositions.push(subData.averagePower);
+    this.powerTickPositions.push(subData.maxPower);
+    this.powerTickPositions.push(this.config.powerGaugeMaxValue);
     gauge.yAxis[0].update();
-  },
-
-  powerTickPositioner: function () {
-    return powerTickPositions;
   },
 
   v1: null,

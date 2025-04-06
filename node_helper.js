@@ -2,95 +2,75 @@
 
 const NodeHelper = require("node_helper");
 const consumptions = require("./consumptions");
-
 const tibber = require("./tibber");
 
-let tibberApi;
-
 module.exports = NodeHelper.create({
-  start: async function () {
+  start: function () {
     console.log(this.name + ": Starting node helper");
-    this.loaded = false;
+    this.instances = {}; // Store state for each instance
   },
 
-  log: function (arg1, arg2 = "") {
-    if (this.config.logging) {
-      console.log(this.name + ": " + arg1 + arg2);
+  log: function (instanceId, message) {
+    if (this.instances[instanceId] && this.instances[instanceId].config.logging) {
+      console.log(this.name + ": " + message);
     }
   },
 
   socketNotificationReceived: async function (notification, payload) {
-    if (notification === "TIBBER_CONFIG") {
-      if (this.loaded) {
-        if (payload.tibberToken != this.config.tibberToken) {
-          console.error(
-            this.name +
-              ": Two or more different tibberTokens detected. That is not supported."
-          );
-        }
-        if (payload.houseNumber != this.config.houseNumber) {
-          console.error(
-            this.name + ": Two or more houseNumbers detected is not supported."
-          );
-        }
-      } else {
-        console.log(this.name + ": Configuring");
-        var config = payload;
-        this.config = config;
-        if (!config.homeId) {
-          console.error(this.name + ": You must configure homeId");
-          console.log(
-            this.name +
-              ": You can run 'node get-homes.js <token>' in the module folder, or go to https://developer.tibber.com/ to find your homeId"
-          );
+    // Extract instanceId from the notification string formatted as "TIBBER_CONFIG_" + instanceId
+    const prefix = "TIBBER_CONFIG_";
+    if (notification.indexOf(prefix) === 0) {
+      const instanceId = notification.substring(prefix.length);
+
+      // check if the instance needs to be configured
+      if (!this.instances[instanceId]) {
+        this.instances[instanceId] = { loaded: false };
+
+        console.log(this.name + ": Configuring instance " + instanceId);
+        this.instances[instanceId].config = payload;
+
+        if (!payload.homeId) {
+          console.error(this.name + ": You must configure homeId for instance " + instanceId);
+          console.log(this.name + ": You can run 'node get-homes.js <token>' in the module folder, or go to https://developer.tibber.com/ to find your homeId");
           return;
         }
-        this.loaded = true;
-        console.log(
-          this.name +
-            ": Tibber update interval: " +
-            config.updateInterval +
-            " minutes"
-        );
-        const sub = this.receiveTibberSubscriptionData.bind(this);
 
-        tibberApi = await tibber(this.config.tibberToken);
+        this.instances[instanceId].loaded = true;
+        console.log(this.name + ": Tibber update interval for instance " + instanceId + ": " + payload.updateInterval + " minutes");
 
-        tibberApi.subscribe(config.homeId, sub);
+        this.instances[instanceId].tibberApi = await tibber(payload.tibberToken);
+        this.instances[instanceId].tibberApi.subscribe(payload.homeId, this.receiveTibberSubscriptionData.bind(this, instanceId));
 
-        this.handleTibber(config);
+        this.handleTibber(instanceId, payload);
         setInterval(() => {
-          this.handleTibber(config);
-        }, 1000 * 60 * config.updateInterval);
+          this.handleTibber(instanceId, payload);
+        }, 1000 * 60 * payload.updateInterval);
       }
     }
   },
 
-  handleTibber: function (config) {
+  handleTibber: function (instanceId, config) {
     const consumptions = this.readConsumptions(config);
-    const tibberData = this.readTibberData(config);
+    const tibberData = this.readTibberData(instanceId, config);
     Promise.all([consumptions, tibberData])
       .then((results) => {
-        this.sendChartData(
-          results[0].filter((r) => r.data.length > 0),
-          results[1]
-        );
+        this.sendChartData(instanceId, results[0].filter((r) => r.data.length > 0), results[1]);
       })
       .catch((e) => {
-        console.log("Error: ", e);
+        console.log("Error in instance " + instanceId + ": ", e);
       });
   },
 
-  readTibberData: async function (config) {
-    return await tibberApi.perHour(config.homeId, config.historyHours);
+  readTibberData: async function (instanceId, config) {
+    return await this.instances[instanceId].tibberApi.perHour(config.homeId, config.historyHours);
   },
 
-  sendChartData: function (consumptions, tibber) {
-    this.log("Tibber data: ");
-    this.log(JSON.stringify(tibber, null, 2));
+  sendChartData: function (instanceId, consumptions, tibber) {
+    this.log(instanceId, "Tibber data: ");
+    this.log(instanceId, JSON.stringify(tibber, null, 2));
 
-    this.log("Consumption parts: ");
-    this.log(JSON.stringify(consumptions, null, 2));
+    this.log(instanceId, "Consumption parts: ");
+    this.log(instanceId, JSON.stringify(consumptions, null, 2));
 
     const tibberData = {
       consumption: [],
@@ -99,107 +79,67 @@ module.exports = NodeHelper.create({
         twoDays: []
       }
     };
-    tibberData.prices.current =
-      tibber.home.currentSubscription.priceInfo.current;
-    tibberData.prices.twoDays = tibber.home.currentSubscription.priceInfo.today.concat(
-      tibber.home.currentSubscription.priceInfo.tomorrow
-    );
+    tibberData.prices.current = tibber.home.currentSubscription.priceInfo.current;
+    tibberData.prices.twoDays = tibber.home.currentSubscription.priceInfo.today.concat(tibber.home.currentSubscription.priceInfo.tomorrow);
+
     if (tibber.home.consumption) {
-      tibberData.totalConsumption = tibber.home.consumption.nodes.filter(
-        (n) => {
-          return n.consumption != null;
-        }
-      );
+      tibberData.totalConsumption = tibber.home.consumption.nodes.filter((n) => n.consumption != null);
     }
 
     if (consumptions) {
       if (tibber.home.consumption) {
-        consumptions.unshift(
-          this.makeRemainingConsumption(
-            tibberData.totalConsumption,
-            consumptions
-          )
-        );
+        consumptions.unshift(this.makeRemainingConsumption(tibberData.totalConsumption, consumptions));
       }
       tibberData.consumptions = consumptions;
-      // tibberData.consumptions = consumptions.filter(c => c.data.length > 0);
     }
 
-    // console.log("Consumptions: ", JSON.stringify(consumptions, null, 2));
-    this.sendSocketNotification("TIBBER_DATA", tibberData);
+    this.sendSocketNotification("TIBBER_DATA_" + instanceId, tibberData);
   },
 
   makeRemainingConsumption: function (total, parts) {
     const convertedTotal = {
       label: "Total",
-      data: total.map((v) => {
-        return {
-          from: new Date(v.from),
-          consumption: v.consumption,
-          consumptionUnit: v.consumptionUnit
-        };
-      })
+      data: total.map((v) => ({
+        from: new Date(v.from),
+        consumption: v.consumption,
+        consumptionUnit: v.consumptionUnit
+      }))
     };
-    // console.log("convertedTotal = ", JSON.stringify(convertedTotal, null, 2));
 
-    const convertedParts = parts
-      .filter((p) => p)
-      .map((p) => {
-        // console.log("p: ", p);
-        return {
-          label: p.label,
-          data: p.data.map((d) => {
-            return {
-              from: new Date(d.from),
-              consumption: d.consumption,
-              consumptionUnit: d.consumptionUnit
-            };
-          })
-        };
-      });
-    // console.log("convertedParts = ", JSON.stringify(convertedParts, null, 2));
+    const convertedParts = parts.filter((p) => p).map((p) => ({
+      label: p.label,
+      data: p.data.map((d) => ({
+        from: new Date(d.from),
+        consumption: d.consumption,
+        consumptionUnit: d.consumptionUnit
+      }))
+    }));
 
-    const sumParts = function (arr, time) {
-      // console.log("sumParts input: arr = ", arr, ", time = ", time);
-      const res = arr.reduce((p, c) => {
-        return (
-          p +
-          c.data
-            .filter((v) => {
-              return v.from.getTime() === time.getTime();
-            })
-            .reduce((p, v) => {
-              return v.consumption;
-            }, 0)
-        );
-      }, 0);
-      return res;
-    };
+    const sumParts = (arr, time) => arr.reduce((p, c) => p + c.data.filter((v) => v.from.getTime() === time.getTime()).reduce((p, v) => v.consumption, 0), 0);
 
     const remaining = {
       label: "Other",
-      data: convertedTotal.data.map((v) => {
-        return {
-          from: v.from,
-          consumption: v.consumption - sumParts(convertedParts, v.from),
-          consumptionUnit: v.consumptionUnit
-        };
-      })
+      data: convertedTotal.data.map((v) => ({
+        from: v.from,
+        consumption: v.consumption - sumParts(convertedParts, v.from),
+        consumptionUnit: v.consumptionUnit
+      }))
     };
 
-    // console.log("Remaining: ", remaining);
     return remaining;
   },
 
-  receiveTibberSubscriptionData: function (subData) {
-    // if (subData.type == "data") {
-    this.sendSocketNotification("TIBBER_SUBSCRIPTION_DATA", subData);
-    this.log("Tibber subscription data:", JSON.stringify(subData, null, 2));
-    // }
+  receiveTibberSubscriptionData: function (instanceId, subData) {
+    this.sendSocketNotification("TIBBER_SUBSCRIPTION_DATA_" + instanceId, subData);
+    this.log(instanceId, "Tibber subscription data: " + JSON.stringify(subData, null, 2));
   },
 
   stop: function () {
-    tibberApi.close();
+    Object.values(this.instances).forEach(instance => {
+      if (instance.tibberApi) {
+        instance.tibberApi.close();
+      }
+    });
   },
 
   readConsumptions: function (config) {
