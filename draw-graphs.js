@@ -64,7 +64,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
 
   Highcharts.chart("tibberdata-" + moduleId, {
     chart: {
-      backgroundColor: "#000000",
+      backgroundColor: "transparent",
       marginTop: 10 + config.adjustTopMargin,
       marginLeft: 80 + config.adjustLeftMargin,
       marginRight: 60 + config.adjustRightMargin
@@ -88,7 +88,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
         title: {
           text: ""
         },
-        gridLineColor: "#000000",
+        gridLineColor: "transparent",
         labels: {
           enabled: false
         },
@@ -164,15 +164,12 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
       {
         // Secondary yAxis (consumption, right)
         title: {
-          text: "Consumption",
-          style: {
-            color: "#000000"
-          }
+          text: ""
         },
         labels: {
           enabled: false
         },
-        gridLineColor: "#000000",
+        gridLineColor: "transparent",
         min: 0,
         // max: Math.ceil(maxConsumption),
         opposite: true
@@ -351,7 +348,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
         ) +
         " " +
         tibber.consumptionUnit(),
-      backgroundColor: "#000",
+      backgroundColor: "transparent",
       borderColor: "#000",
       y: 0,
       align: "left",
@@ -383,8 +380,8 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
         ) +
         " " +
         tibber.consumptionUnit(),
-      backgroundColor: "#000",
-      borderColor: "#000",
+      backgroundColor: "transparent",
+      borderColor: "transparent",
       y: 0,
       align: "left",
       verticalAlign: "middle",
