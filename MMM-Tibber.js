@@ -1,10 +1,5 @@
 "use strict";
 
-Date.prototype.addHours = function (h) {
-  this.setHours(this.getHours() + h);
-  return this;
-};
-
 Module.register("MMM-Tibber", {
   getScripts: function () {
     return [
@@ -232,7 +227,7 @@ Module.register("MMM-Tibber", {
 
   socketNotificationReceived: function (notification, payload) {
     if (payload == null) {
-      Log.warn(self.name + ": " + notification + " - No payload");
+      Log.warn(this.name + ": " + notification + " - No payload");
       return;
     }
 
@@ -424,19 +419,21 @@ Module.register("MMM-Tibber", {
     this.v3 = subData.voltagePhase3 || this.v3;
     const gauge = this.voltageDrawing;
     const phase1 = gauge.series[0].points[0];
-    const phase2 = gauge.series[1].points[0];
-    const phase3 = gauge.series[2].points[0];
+    const phase2 = gauge.series[1] && gauge.series[1].points[0];
+    const phase3 = gauge.series[2] && gauge.series[2].points[0];
     this.v1 &&
       phase1.update({
         y: Math.round(this.v1),
         color: this.getColor(this.config.voltageGaugeColors, this.v1)
       });
     this.v2 &&
+      phase2 &&
       phase2.update({
         y: Math.round(this.v2),
         color: this.getColor(this.config.voltageGaugeColors, this.v2)
       });
     this.v3 &&
+      phase3 &&
       phase3.update({
         y: Math.round(this.v3),
         color: this.getColor(this.config.voltageGaugeColors, this.v3)
@@ -467,19 +464,21 @@ Module.register("MMM-Tibber", {
     this.c3 = subData.currentL3 || this.c3;
     const gauge = this.currentDrawing;
     const phase1 = gauge.series[0].points[0];
-    const phase2 = gauge.series[1].points[0];
-    const phase3 = gauge.series[2].points[0];
+    const phase2 = gauge.series[1] && gauge.series[1].points[0];
+    const phase3 = gauge.series[2] && gauge.series[2].points[0];
     this.c1 &&
       phase1.update({
         y: Math.round(this.c1),
         color: this.getColor(this.config.currentGaugeColors, this.c1)
       });
     this.c2 &&
+      phase2 &&
       phase2.update({
         y: Math.round(this.c2),
         color: this.getColor(this.config.currentGaugeColors, this.c2)
       });
     this.c3 &&
+      phase3 &&
       phase3.update({
         y: Math.round(this.c3),
         color: this.getColor(this.config.currentGaugeColors, this.c3)
@@ -491,30 +490,38 @@ Module.register("MMM-Tibber", {
     const accumulatedPower = document.getElementById(
       "acc-power-" + this.identifier + "-value"
     );
-    accumulatedPower.innerHTML = Math.round(subData.accumulatedConsumption);
+    if (accumulatedPower) {
+      accumulatedPower.innerHTML = Math.round(subData.accumulatedConsumption);
+    }
 
     const accumulatedPowerUnit = document.getElementById(
       "acc-power-" + this.identifier + "-unit"
     );
-    accumulatedPowerUnit.innerHTML = this.config.accumulatedPowerUnit;
+    if (accumulatedPowerUnit) {
+      accumulatedPowerUnit.innerHTML = this.config.accumulatedPowerUnit;
+    }
 
     // Accumulated cost
     const accumulatedCost = document.getElementById(
       "acc-cost-" + this.identifier + "-value"
     );
-    accumulatedCost.innerHTML = Math.round(
-      subData.accumulatedCost +
-        (this.config.includeAdditionalCostsInPrice
-          ? this.sumAdditionalCosts(this.config) *
-            subData.accumulatedConsumption
-          : 0)
-    );
+    if (accumulatedCost) {
+      accumulatedCost.innerHTML = Math.round(
+        subData.accumulatedCost +
+          (this.config.includeAdditionalCostsInPrice
+            ? this.sumAdditionalCosts(this.config) *
+              subData.accumulatedConsumption
+            : 0)
+      );
+    }
 
     const accumulatedCostUnit = document.getElementById(
       "acc-cost-" + this.identifier + "-unit"
     );
-    accumulatedCostUnit.innerHTML =
-      this.config.accumulatedCostCurrency || subData.currency;
+    if (accumulatedCostUnit) {
+      accumulatedCostUnit.innerHTML =
+        this.config.accumulatedCostCurrency || subData.currency;
+    }
   },
 
   getColor(colors, value) {

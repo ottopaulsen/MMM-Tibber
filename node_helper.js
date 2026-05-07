@@ -50,9 +50,9 @@ module.exports = NodeHelper.create({
   },
 
   handleTibber: function (instanceId, config) {
-    const consumptions = this.readConsumptions(config);
+    const consumptionsPromise = this.readConsumptions(config);
     const tibberData = this.readTibberData(instanceId, config);
-    Promise.all([consumptions, tibberData])
+    Promise.all([consumptionsPromise, tibberData])
       .then((results) => {
         this.sendChartData(instanceId, results[0].filter((r) => r.data.length > 0), results[1]);
       })
@@ -115,7 +115,7 @@ module.exports = NodeHelper.create({
       }))
     }));
 
-    const sumParts = (arr, time) => arr.reduce((p, c) => p + c.data.filter((v) => v.from.getTime() === time.getTime()).reduce((p, v) => v.consumption, 0), 0);
+    const sumParts = (arr, time) => arr.reduce((p, c) => p + c.data.filter((v) => v.from.getTime() === time.getTime()).reduce((p, v) => p + v.consumption, 0), 0);
 
     const remaining = {
       label: "Other",

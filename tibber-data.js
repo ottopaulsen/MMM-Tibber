@@ -20,6 +20,11 @@ class TibberData {
 			.filter((p) => {
 				return p.x >= showFromTime && p.x <= showToTime;
 			});
+		if (priceData.length === 0) {
+			priceData.minPrice = 0;
+			priceData.maxPrice = 0;
+			return priceData;
+		}
 		priceData.minPrice = priceData.reduce((min, p) => (p.y < min ? p.y : min), priceData[0].y);
 		priceData.maxPrice = priceData.reduce((max, p) => (p.y > max ? p.y : max), priceData[0].y);
 		return priceData;
@@ -99,8 +104,6 @@ class TibberData {
 				})
 				.filter((c) => c.x >= showFromTime)
 		});
-		console.log("showFromTime: ", showFromTime);
-		console.log("res: ", res);
 		return res;
 	}
 

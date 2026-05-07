@@ -1,6 +1,5 @@
 "use strict";
 
-const fetch = require("node-fetch");
 const {
   dataPerHourQuery,
   liveQuery,
@@ -11,12 +10,13 @@ const {
 const WebSocket = require("ws");
 const os = require("os");
 const fs = require("fs");
+const path = require("path");
 
 const GQL_ENDPOINT = "https://api.tibber.com/v1-beta/gql";
 const PROTOCOL = ["graphql-transport-ws"];
 
 const getUserAgent = function () {
-  const packageJson = fs.readFileSync("package.json");
+  const packageJson = fs.readFileSync(path.join(__dirname, "package.json"));
   const packageData = JSON.parse(packageJson);
   const version = packageData.version;
 
@@ -75,6 +75,9 @@ const tibber = async function (tibberToken) {
       .replace("HISTHOURS", hoursHistory)
       .replace("HOMEID", homeId);
     const res = await tibberGqlQuery(query);
+    if (!res.data || !res.data.data) {
+      throw new Error("Tibber API returned no data for perHour query (status " + res.status + ")");
+    }
     return res.data.data.viewer;
   };
 
@@ -211,6 +214,12 @@ const tibber = async function (tibberToken) {
 
       ws.on("close", function close() {
         console.log("Tibber WebSocket closed");
+        clearTimeout(heartbeat);
+        if (!terminated && connected) {
+          // Unexpected close — reconnect with backoff
+          connected = false;
+          reconnect();
+        }
       });
     };
 
@@ -256,8 +265,10 @@ const tibber = async function (tibberToken) {
   const close = function () {
     // Close called from client. Shall close ws and terminate all activity.
     terminated = true;
-    sendMessage("complete", subscriptionId);
-    ws.close();
+    if (ws) {
+      sendMessage("complete", subscriptionId);
+      ws.close();
+    }
   };
 
   const userRes = await tibberGqlQuery(user);
