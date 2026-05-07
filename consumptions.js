@@ -15,7 +15,7 @@ class Item {
 	}
 }
 
-exports.prometheus = function (config) {
+exports.prometheus = async function (config) {
 	const to = new Date();
 	let from = new Date(to);
 	from.setHours(to.getHours() - 23);
@@ -34,42 +34,32 @@ exports.prometheus = function (config) {
 	}
 
 	query = query + "[1h])&start=" + fromTime + "&end=" + toTime + "&step=3600";
-	// console.log("Query: ", query);
 
-	return import("node-fetch")
-		.then(() => {
-			return fetch(query, {
-				headers: {
-					//   Authorization: "Bearer " + tibberToken,
-					"Content-Type": "application/json"
-				},
-				method: "GET",
-				resolveWithFullResponse: true,
-				followRedirect: false
-			})
-				.then((res) => {
-					const body = JSON.parse(res.body);
-					const arr = jsonpointer.get(body, "/data/result/0/values");
-					const consumptionArr = !arr
-						? []
-						: arr.map((v) => {
-								const time = jsonpointer.get(v, "/0");
-								const value = jsonpointer.get(v, "/1");
-								let from = new Date(time * 1000);
-								from.setHours(from.getHours() - 1);
-								const item = new Item(from, Math.round(value * 100) / 100, "kWh");
-								return item;
-						  });
-					return {
-						label: config.label,
-						data: consumptionArr
-					};
-				})
-				.catch((e) => {
-					console.error("Failed to read from Prometheus: ", e);
-				});
-		})
-		.catch((e) => {
-			console.log("Import fetch error: " + e);
+	try {
+		const res = await fetch(query, {
+			headers: {
+				"Content-Type": "application/json"
+			},
+			method: "GET"
 		});
+		const body = await res.json();
+		const arr = jsonpointer.get(body, "/data/result/0/values");
+		const consumptionArr = !arr
+			? []
+			: arr.map((v) => {
+					const time = jsonpointer.get(v, "/0");
+					const value = jsonpointer.get(v, "/1");
+					let from = new Date(time * 1000);
+					from.setHours(from.getHours() - 1);
+					const item = new Item(from, Math.round(value * 100) / 100, "kWh");
+					return item;
+			  });
+		return {
+			label: config.label,
+			data: consumptionArr
+		};
+	} catch (e) {
+		console.error("Failed to read from Prometheus: ", e);
+		return { label: config.label, data: [] };
+	}
 };

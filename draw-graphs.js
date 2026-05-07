@@ -1,9 +1,15 @@
 "use strict";
 
+function addHours(date, h) {
+  const d = new Date(date);
+  d.setHours(d.getHours() + h);
+  return d;
+}
+
 function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
   const includeAdditional = config.includeAdditionalCostsInPrice;
-  const showFromTime = new Date().addHours(-config.historyHours - 1);
-  const showToTime = new Date().addHours(config.futureHours);
+  const showFromTime = addHours(new Date(), -config.historyHours - 1);
+  const showToTime = addHours(new Date(), config.futureHours);
   const minConsumption = tibber.minConsumption();
   const maxConsumption = tibber.maxConsumption();
   const priceData = tibber.priceData(
@@ -230,7 +236,6 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
   }
 
   function seriesPrice(config, priceData) {
-    console.log("priceData: ", priceData);
     return {
       name: "Powerprice",
       type: config.priceChartType,
@@ -247,7 +252,6 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
   }
 
   function seriesSavings(config, savingsData) {
-    console.log("savingsData: ", savingsData);
     return {
       name: "Savings",
       type: config.savingsChartType,
