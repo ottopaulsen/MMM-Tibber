@@ -18,6 +18,12 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
     (level, type) => config.priceColumnColors[level][type]
   );
 
+  // Normalize font size to a CSS string (v11+ requires "Npx", not a raw number)
+  const labelFontSize =
+    typeof config.graphLabelFontSize === "number"
+      ? config.graphLabelFontSize + "px"
+      : config.graphLabelFontSize;
+
   const sumAdditional = sumAdditionalCosts;
   const minPrice = priceData.minPrice + (includeAdditional ? sumAdditional : 0);
   const maxPrice = priceData.maxPrice + (includeAdditional ? sumAdditional : 0);
@@ -61,10 +67,13 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
     annotationsLabels.push(...annotationsLabelsAdditionalCosts(config));
   annotationsLabels.push(...annotationsLabelsConsumptionParts(config));
 
-  // Show time in local timezone
+  // Show time in local timezone; preserve pre-v12 locale-neutral date formatting
   Highcharts.setOptions({
     time: {
       useUTC: false
+    },
+    lang: {
+      locale: "en-GB"
     }
   });
 
@@ -127,7 +136,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
               verticalAlign: "top",
               style: {
                 color: config.minPriceColor,
-                fontSize: config.graphLabelFontSize
+                fontSize: labelFontSize
               },
               x: 57 + config.adjustPriceLabelsX,
               y: 13
@@ -159,7 +168,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
               verticalAlign: "top",
               style: {
                 color: config.maxPriceColor,
-                fontSize: config.graphLabelFontSize
+                fontSize: labelFontSize
               },
               x: 57 + config.adjustPriceLabelsX,
               y: -3
@@ -189,6 +198,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
         pointPadding: 0.0,
         groupPadding: 0.0,
         borderWidth: 0,
+        borderRadius: 0,
         stacking: "normal"
       },
       line: {
@@ -328,7 +338,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
       y: -10,
       style: {
         color: config.curPriceColor,
-        fontSize: config.graphLabelFontSize
+        fontSize: labelFontSize
       },
       zIndex: 15
     };
@@ -361,7 +371,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
       overflow: "none",
       style: {
         color: config.consumptionColor,
-        fontSize: config.graphLabelFontSize
+        fontSize: labelFontSize
       }
     };
   }
@@ -393,7 +403,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
       overflow: "none",
       style: {
         color: config.consumptionColor,
-        fontSize: config.graphLabelFontSize
+        fontSize: labelFontSize
       }
     };
   }
@@ -419,7 +429,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
         overflow: "none",
         style: {
           color: config.additionalCostsLabelColor,
-          fontSize: config.graphLabelFontSize
+          fontSize: labelFontSize
         }
       };
     });
@@ -447,7 +457,7 @@ function drawGraphs(moduleId, tibber, config, sumAdditionalCosts, savingsData) {
           overflow: "none",
           style: {
             color: c.color,
-            fontSize: config.graphLabelFontSize
+            fontSize: labelFontSize
           }
         };
       });

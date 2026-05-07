@@ -17,7 +17,7 @@
     "power"
   ],
   "dependencies": {
-    "highcharts": "^9.2.2",
+    "highcharts": "^12.6.0",
     "jsonpointer": "^5.0.1",
     "ws": "^8.11.0"
   }
