@@ -342,8 +342,9 @@ Module.register("MMM-Tibber", {
     const max1 = gauge.series[5].points[0];
     const max2 = gauge.series[6].points[0];
     const stepSize = 120;
-    min1.update(subData.minPower - stepSize);
-    min2.update(subData.minPower + stepSize);
+    // Update without redrawing, then redraw once at the end (see gauge_options.js).
+    min1.update(subData.minPower - stepSize, false);
+    min2.update(subData.minPower + stepSize, false);
     const redPower = Math.min(
       (subData.maxPower * this.config.redPowerPercentOfMax) / 100,
       (subData.averagePower * this.config.redPowerPercentOfAvg) / 100
@@ -358,14 +359,17 @@ Module.register("MMM-Tibber", {
     const color = this.config.powerGaugeDynamicColors
       ? this.config.powerGaugeColors[dynamicColorIndex].color
       : this.getColor(this.config.powerGaugeColors, subData.power);
-    current.update({
-      y: subData.power,
-      color: color
-    });
-    avg1.update(subData.averagePower - stepSize);
-    avg2.update(subData.averagePower + stepSize);
-    max1.update(subData.maxPower - stepSize);
-    max2.update(subData.maxPower + stepSize);
+    current.update(
+      {
+        y: subData.power,
+        color: color
+      },
+      false
+    );
+    avg1.update(subData.averagePower - stepSize, false);
+    avg2.update(subData.averagePower + stepSize, false);
+    max1.update(subData.maxPower - stepSize, false);
+    max2.update(subData.maxPower + stepSize, false);
 
     if (
       subData.maxPower > this.config.powerGaugeMaxValue &&
@@ -388,7 +392,8 @@ Module.register("MMM-Tibber", {
     this.powerTickPositions.push(subData.averagePower);
     this.powerTickPositions.push(subData.maxPower);
     this.powerTickPositions.push(this.config.powerGaugeMaxValue);
-    gauge.yAxis[0].update();
+    gauge.yAxis[0].update({}, false);
+    gauge.redraw(false);
   },
 
   v1: null,
@@ -422,22 +427,32 @@ Module.register("MMM-Tibber", {
     const phase2 = gauge.series[1] && gauge.series[1].points[0];
     const phase3 = gauge.series[2] && gauge.series[2].points[0];
     this.v1 &&
-      phase1.update({
-        y: Math.round(this.v1),
-        color: this.getColor(this.config.voltageGaugeColors, this.v1)
-      });
+      phase1.update(
+        {
+          y: Math.round(this.v1),
+          color: this.getColor(this.config.voltageGaugeColors, this.v1)
+        },
+        false
+      );
     this.v2 &&
       phase2 &&
-      phase2.update({
-        y: Math.round(this.v2),
-        color: this.getColor(this.config.voltageGaugeColors, this.v2)
-      });
+      phase2.update(
+        {
+          y: Math.round(this.v2),
+          color: this.getColor(this.config.voltageGaugeColors, this.v2)
+        },
+        false
+      );
     this.v3 &&
       phase3 &&
-      phase3.update({
-        y: Math.round(this.v3),
-        color: this.getColor(this.config.voltageGaugeColors, this.v3)
-      });
+      phase3.update(
+        {
+          y: Math.round(this.v3),
+          color: this.getColor(this.config.voltageGaugeColors, this.v3)
+        },
+        false
+      );
+    gauge.redraw(false);
   },
 
   c1: null,
@@ -467,22 +482,32 @@ Module.register("MMM-Tibber", {
     const phase2 = gauge.series[1] && gauge.series[1].points[0];
     const phase3 = gauge.series[2] && gauge.series[2].points[0];
     this.c1 &&
-      phase1.update({
-        y: Math.round(this.c1),
-        color: this.getColor(this.config.currentGaugeColors, this.c1)
-      });
+      phase1.update(
+        {
+          y: Math.round(this.c1),
+          color: this.getColor(this.config.currentGaugeColors, this.c1)
+        },
+        false
+      );
     this.c2 &&
       phase2 &&
-      phase2.update({
-        y: Math.round(this.c2),
-        color: this.getColor(this.config.currentGaugeColors, this.c2)
-      });
+      phase2.update(
+        {
+          y: Math.round(this.c2),
+          color: this.getColor(this.config.currentGaugeColors, this.c2)
+        },
+        false
+      );
     this.c3 &&
       phase3 &&
-      phase3.update({
-        y: Math.round(this.c3),
-        color: this.getColor(this.config.currentGaugeColors, this.c3)
-      });
+      phase3.update(
+        {
+          y: Math.round(this.c3),
+          color: this.getColor(this.config.currentGaugeColors, this.c3)
+        },
+        false
+      );
+    gauge.redraw(false);
   },
 
   updateTable: function (subData) {

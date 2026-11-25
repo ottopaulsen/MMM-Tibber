@@ -2,7 +2,12 @@ const gaugeOptions = function(config) {
   return {
     chart: {
       type: "solidgauge",
-      backgroundColor: "#000"
+      backgroundColor: "#000",
+      // No animation: Highcharts animates via requestAnimationFrame, which
+      // never fires while the display is powered off (wlopm). Unfinished
+      // animations then pile up on every Tibber update until the renderer's
+      // main thread is saturated, starving other modules.
+      animation: false
     },
 
     title: null,
@@ -42,6 +47,9 @@ const gaugeOptions = function(config) {
     },
 
     plotOptions: {
+      series: {
+        animation: false
+      },
       solidgauge: {
         dataLabels: {
           enabled: false,
